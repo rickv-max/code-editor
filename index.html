@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Live Editor dengan Mode Desktop & iPhone 14 Pro Preview</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="sidebar">
+  <button id="btn-html" class="active" title="HTML">&lt;/&gt;</button>
+  <button id="btn-css" title="CSS">🎨</button>
+  <button id="btn-js" title="JavaScript">JS</button>
+</div>
+
+<div id="main">
+  <div id="toolbar">
+    <button id="formatBtn" title="Format Kode">Format Kode</button>
+    <button id="modeDesktop" class="active" title="Mode Desktop">Desktop</button>
+    <button id="modeIphone" title="Mode iPhone 14 Pro">iPhone 14 Pro</button>
+  </div>
+  <div id="editor-container">
+    <textarea id="code-editor"></textarea>
+  </div>
+  <div id="preview-container"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-beautify@1.14.0/js/lib/beautify.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
