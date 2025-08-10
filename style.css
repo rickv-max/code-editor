@@ -1,195 +1,293 @@
 /* Reset dan dasar */
-* {
+
+- {
   box-sizing: border-box;
-}
+  }
+
 body, html {
-  margin: 0; padding: 0; height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #1e1e1e;
-  color: #ddd;
-  display: flex;
+margin: 0;
+padding: 0;
+height: 100vh;
+font-family: ‘Segoe UI’, Tahoma, Geneva, Verdana, sans-serif;
+background-color: #1e1e1e;
+color: #ddd;
+display: flex;
+overflow: hidden;
 }
 
 /* Sidebar */
 #sidebar {
-  width: 60px;
-  background-color: #252526;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 0;
-  border-right: 1px solid #333;
+width: 60px;
+background-color: #252526;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 10px 0;
+border-right: 1px solid #333;
+flex-shrink: 0;
 }
+
 #sidebar button {
-  background: none;
-  border: none;
-  color: #ccc;
-  font-size: 20px;
-  padding: 12px 0;
-  width: 100%;
-  cursor: pointer;
-  border-left: 4px solid transparent;
-  transition: all 0.3s ease;
-  user-select: none;
+background: none;
+border: none;
+color: #ccc;
+font-size: 16px;
+padding: 15px 0;
+width: 100%;
+cursor: pointer;
+border-left: 4px solid transparent;
+transition: all 0.3s ease;
+user-select: none;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-bottom: 5px;
 }
+
 #sidebar button:hover {
-  background-color: #333;
-  color: #fff;
+background-color: #333;
+color: #fff;
 }
+
 #sidebar button.active {
-  border-left: 4px solid #007acc;
-  color: #fff;
-  background-color: #333;
+border-left: 4px solid #007acc;
+color: #fff;
+background-color: #333;
 }
 
 /* Main container */
 #main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+flex: 1;
+display: flex;
+flex-direction: column;
+overflow: hidden;
 }
 
 /* Toolbar */
 #toolbar {
-  background: #1e1e1e;
-  border-bottom: 1px solid #333;
-  padding: 5px 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+background: #252526;
+border-bottom: 1px solid #333;
+padding: 8px 15px;
+display: flex;
+align-items: center;
+gap: 10px;
+flex-shrink: 0;
 }
+
 #toolbar button {
-  background: #007acc;
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 3px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  user-select: none;
+background: #007acc;
+border: none;
+color: white;
+padding: 8px 16px;
+border-radius: 4px;
+font-size: 13px;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.2s ease;
+user-select: none;
 }
+
 #toolbar button:hover {
-  background: #005f9e;
+background: #1177bb;
+transform: translateY(-1px);
 }
+
 #toolbar button.active {
-  background: #005f9e;
+background: #005f9e;
+box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Editor container fixed height */
+/* Editor container */
 #editor-container {
-  height: 55vh;
-  background: #1e1e1e;
-  border-left: none;
-  border-right: none;
-  display: flex;
-  flex-direction: column;
+flex: 1;
+background: #1e1e1e;
+display: flex;
+flex-direction: column;
+min-height: 0;
+overflow: hidden;
 }
 
-/* Pastikan CodeMirror container & wrapper punya ukuran tetap */
-.CodeMirror, .CodeMirror-scroll {
-  height: 100% !important;
-  min-height: 300px;
-  width: 100% !important;
-  min-width: 100%;
-}
-
-/* Editor styling mirip VS Code */
+/* CodeMirror styling */
 .CodeMirror {
-  height: 100% !important;
-  background-color: #1e1e1e !important;
-  color: #d4d4d4 !important;
-  font-family: Consolas, Menlo, Monaco, 'Courier New', monospace !important;
-  font-size: 14px;
-  line-height: 1.5;
-  border: 1px solid #333;
-  border-radius: 4px;
-  box-sizing: border-box;
+height: 100% !important;
+background-color: #1e1e1e !important;
+color: #d4d4d4 !important;
+font-family: ‘Cascadia Code’, Consolas, ‘Courier New’, monospace !important;
+font-size: 14px;
+line-height: 1.6;
+border: none;
+box-sizing: border-box;
+}
+
+.CodeMirror-scroll {
+height: 100% !important;
+overflow-y: auto !important;
 }
 
 /* Caret */
 .CodeMirror-cursor {
-  border-left: 2px solid #aeafad !important;
+border-left: 2px solid #aeafad !important;
 }
 
 /* Highlight baris aktif */
 .CodeMirror-activeline-background {
-  background: rgba(255, 255, 255, 0.05) !important;
+background: rgba(255, 255, 255, 0.05) !important;
 }
 
 /* Nomor baris */
 .CodeMirror-gutters {
-  background: #252526 !important;
-  border-right: 1px solid #333 !important;
-  color: #858585 !important;
+background: #252526 !important;
+border-right: 1px solid #333 !important;
+color: #858585 !important;
+padding-right: 10px;
+}
+
+.CodeMirror-linenumber {
+color: #858585 !important;
+padding: 0 8px 0 0;
 }
 
 /* Highlight tanda kurung */
 .CodeMirror-matchingbracket {
-  text-decoration: underline;
-  color: #ffd700 !important;
-  font-weight: bold;
+text-decoration: underline;
+color: #ffd700 !important;
+font-weight: bold;
 }
 
 /* Highlight selection */
 .CodeMirror-selected {
-  background: #264f78 !important;
-  color: #fff !important;
+background: #264f78 !important;
 }
 
-/* Preview container fixed height */
+/* Preview container */
 #preview-container {
-  height: 40vh;
-  border-top: 1px solid #333;
-  padding: 10px;
-  background: #111;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+flex: 1;
+border-top: 1px solid #333;
+background: #111;
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 20px;
+min-height: 300px;
+overflow: auto;
 }
 
-/* Preview iframe styling */
-#preview-container iframe {
-  border: none;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+/* Preview iframe styling untuk desktop */
+#desktop-preview {
+width: 100%;
+height: 100%;
+border: 1px solid #444;
+border-radius: 8px;
+background: white;
+box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
-/* iPhone 14 Pro frame styling (jika dipakai) */
+/* iPhone 14 Pro frame styling */
 #iphone14pro-frame {
-  width: 393px;    
-  height: 852px;   
-  background: #000;
-  border-radius: 70px;
-  box-shadow: 0 0 40px rgba(0,0,0,0.9);
-  position: relative;
-  overflow: hidden;
-  border: 24px solid black;
-  border-top-width: 70px;
-  border-bottom-width: 70px;
+width: 393px;  
+height: 852px;  
+background: #1c1c1e;
+border-radius: 47px;
+position: relative;
+overflow: hidden;
+box-shadow:
+0 0 0 2px #333,
+0 8px 40px rgba(0,0,0,0.6);
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
 }
 
-/* Notch styling */
+/* Dynamic Island (notch) */
 #iphone14pro-frame::before {
-  content: "";
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 210px;
-  height: 30px;
-  background: #111;
-  border-radius: 20px 20px 0 0;
-  box-shadow: inset 0 3px 6px rgba(0,0,0,0.7);
-  z-index: 10;
+content: “”;
+position: absolute;
+top: 12px;
+left: 50%;
+transform: translateX(-50%);
+width: 125px;
+height: 30px;
+background: #000;
+border-radius: 20px;
+z-index: 10;
 }
 
 /* iPhone iframe inside frame */
-#iphone14pro-frame iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  border-radius: 45px;
-  background: white;
+#iphone14pro-preview {
+width: calc(100% - 8px);
+height: calc(100% - 8px);
+border: none;
+border-radius: 42px;
+background: white;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+body {
+flex-direction: column;
+}
+
+#sidebar {
+width: 100%;
+height: 60px;
+flex-direction: row;
+padding: 0 10px;
+}
+
+#sidebar button {
+border-left: none;
+border-bottom: 4px solid transparent;
+padding: 0 15px;
+}
+
+#sidebar button.active {
+border-left: none;
+border-bottom: 4px solid #007acc;
+}
+
+#iphone14pro-frame {
+width: 300px;
+height: 650px;
+}
+
+#iphone14pro-frame::before {
+width: 100px;
+height: 25px;
+top: 10px;
+}
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+width: 8px;
+height: 8px;
+}
+
+::-webkit-scrollbar-track {
+background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+background: #444;
+border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+background: #555;
+}
+
+/* Loading animation */
+.loading {
+display: inline-block;
+width: 20px;
+height: 20px;
+border: 2px solid #333;
+border-radius: 50%;
+border-top-color: #007acc;
+animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+to { transform: rotate(360deg); }
 }
