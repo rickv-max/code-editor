@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>Code Editor - The Final Version</title>
+<title>Code Editor - Final Version</title>
 <!-- FONT AWESOME & CODEMIRROR CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
@@ -24,116 +24,122 @@
 
   /* --- STRUKTUR UTAMA (MOBILE FIRST) --- */
   #main-content {
-    flex: 1; display: flex; overflow: hidden;
+    flex: 1; overflow: hidden; position: relative;
   }
-  #bottom-bar {
+  #bottom-nav {
     width: 100%; height: 55px; background-color: var(--bg-2);
     display: flex; justify-content: space-around; align-items: center;
     border-top: 1px solid var(--border); order: 2; flex-shrink: 0;
   }
-  #bottom-bar .nav-btn {
+  #bottom-nav .nav-btn {
     background: none; border: none; color: var(--text);
     display: flex; flex-direction: column; align-items: center;
     gap: 4px; font-size: 10px; height: 100%; padding: 5px 12px;
-    cursor: pointer; border-top: 3px solid transparent;
+    cursor: pointer;
   }
-  #bottom-bar .nav-btn i { font-size: 20px; }
-  #bottom-bar .nav-btn.active { color: var(--accent); border-top-color: var(--accent); }
+  #bottom-nav .nav-btn i { font-size: 20px; }
+  
+  /* Tampilan "Halaman" yang bisa diganti-ganti */
+  .view-container {
+    position: absolute; inset: 0; height: 100%; width: 100%;
+    display: none; flex-direction: column;
+    background-color: var(--bg-1);
+  }
+  .view-container.active { display: flex; }
 
-  /* PANEL KIRI (SIDE PANEL / FILE EXPLORER) */
-  #side-panel {
-    display: none; flex-direction: column; flex: 0 0 250px;
-    background-color: var(--bg-2); border-right: 1px solid var(--border);
+  /* Tampilan 1: Editor */
+  #editor-view .editor-header {
+    display: flex; background-color: var(--bg-2); flex-shrink: 0;
+    overflow-x: auto;
   }
-  body.side-panel-visible #side-panel { display: flex; }
-  .panel-header { padding: 12px 15px; font-weight: 600; font-size: 14px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-  .file-list { padding: 5px; }
-  .file-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
-  .file-item:hover { background-color: var(--bg-3); }
-  .file-item.active { background-color: var(--accent); color: white; }
-  .panel-actions { padding: 15px; border-top: 1px solid var(--border); margin-top: auto; }
+  /* --- PERBAIKAN DESAIN TAB SEPERTI VS CODE --- */
+  #editor-view .editor-header button {
+    background: none; border: none; color: var(--text);
+    padding: 10px 15px; font-weight: 500; cursor: pointer;
+    border-right: 1px solid var(--border);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  #editor-view .editor-header button.active {
+    color: white;
+    background-color: var(--bg-1);
+    border-bottom-color: var(--accent);
+  }
+  /* --- AKHIR PERBAIKAN DESAIN TAB --- */
+  #editor-view .cm-container { flex: 1; position: relative; }
+  .CodeMirror { position: absolute; inset: 0; height: 100%; font-size: 14px; }
+
+  /* Tampilan 2: File Manager (Impor/Ekspor) */
+  #files-view { background-color: var(--bg-2); }
+  .files-header {
+    display: flex; align-items: center; padding: 0 10px;
+    height: 50px; background-color: var(--bg-1); border-bottom: 1px solid var(--border);
+  }
+  .files-header .back-btn {
+    background: none; border: none; color: var(--accent);
+    font-size: 16px; font-weight: 600; padding: 10px;
+  }
+  .panel-actions { padding: 15px; }
   .panel-actions button {
     width: 100%; background-color: var(--accent); color: white;
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    border: none; padding: 10px; border-radius: 6px; cursor: pointer;
-    margin-bottom: 10px; font-weight: 600; font-size: 14px;
+    border: none; padding: 12px; border-radius: 6px; cursor: pointer;
+    margin-bottom: 10px; font-weight: 600; font-size: 16px;
   }
 
-  /* PANEL KANAN (EDITOR) */
-  #right-panel { flex: 1; display: flex; flex-direction: column; }
-  #editor-header { display: flex; background-color: var(--bg-3); flex-shrink: 0; }
-  #editor-header button { flex: 1; background: none; border: none; color: var(--text); padding: 10px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
-  #editor-header button.active { color: white; border-bottom-color: var(--accent); }
-  .cm-container { flex: 1; position: relative; }
-  .CodeMirror { position: absolute; inset: 0; height: 100%; font-size: 14px; }
-
-  /* PRATINJAU (OVERLAY) */
-  #preview-overlay { position: fixed; inset: 0; z-index: 1000; display: none; flex-direction: column; background: var(--preview-bg); }
+  /* Tampilan 3: Pratinjau (Overlay Fullscreen) */
+  #preview-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    display: none; flex-direction: column; background: var(--preview-bg);
+  }
   #preview-overlay.active { display: flex; }
-  .preview-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background-color:var(--bg-2);border-bottom:1px solid var(--border);flex-shrink:0}.preview-header .back-btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:600}.preview-controls button{background:none;border:1px solid var(--text);color:var(--text);padding:5px;width:38px;border-radius:4px;margin-left:5px}.preview-controls button.active{background:var(--accent);border-color:var(--accent)}.preview-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:15px}
-  #desktop-frame{min-width:800px;width:95%;max-width:1200px;aspect-ratio:16/9;background:#fff;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:flex;flex-direction:column;margin:auto}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview{width:100%;height:100%;border:none}
-  #iphone-frame{width:280px;height:580px;flex-shrink:0;background:#111;border:4px solid #333;border-radius:40px;padding:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:none;position:relative}.iphone-screen{width:100%;height:100%;background:#fff;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}#mobile-preview{width:100%;height:100%;border:none}.volume-btn,.power-btn{position:absolute;background:#333}.volume-btn{width:3px;height:40px;left:-7px}.volume-btn.top{top:100px}.volume-btn.bottom{top:160px}.power-btn{width:3px;height:60px;right:-7px;top:120px}
-
-  /* --- LAYOUT DESKTOP --- */
-  @media (min-width: 769px) {
-    body { flex-direction: row; }
-    #bottom-bar {
-      order: 1; width: 55px; height: 100%;
-      flex-direction: column; justify-content: flex-start;
-      border-top: none; border-right: 1px solid var(--border);
-      padding-top: 10px;
-    }
-    #main-content { order: 2; }
-    #bottom-bar .nav-btn {
-      border-top: none; border-left: 3px solid transparent; width: 100%;
-    }
-    #bottom-bar .nav-btn.active { border-left-color: var(--accent); }
-    #bottom-bar .nav-btn span { display: none; }
-  }
+  
+  /* CSS Pratinjau Lengkap (Sama seperti sebelumnya) */
+  .preview-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background-color:var(--bg-2);border-bottom:1px solid var(--border);flex-shrink:0}.preview-header .back-btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:600}.preview-controls button{background:none;border:1px solid var(--text);color:var(--text);padding:5px;width:38px;border-radius:4px;margin-left:5px}.preview-controls button.active{background:var(--accent);border-color:var(--accent)}.preview-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:15px}#desktop-frame{min-width:800px;width:95%;max-width:1200px;aspect-ratio:16/9;background:#fff;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:flex;flex-direction:column;margin:auto}#iphone-frame{width:280px;height:580px;flex-shrink:0;background:#111;border:4px solid #333;border-radius:40px;padding:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:none;position:relative}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview,#mobile-preview{width:100%;height:100%;border:none}.iphone-screen{width:100%;height:100%;background:#fff;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}
 </style>
 </head>
-<body class="side-panel-visible">
-
-<div id="bottom-bar">
-  <button id="nav-files" class="nav-btn active" title="Files">
-    <i class="fa-solid fa-folder-open"></i><span>Files</span>
-  </button>
-  <button id="nav-run" class="nav-btn" title="Run Preview">
-    <i class="fa-solid fa-play"></i><span>Run</span>
-  </button>
-</div>
+<body>
 
 <main id="main-content">
-  <div id="side-panel">
-    <div class="panel-header">Explorer</div>
-    <div class="file-list">
-      <div id="file-html" class="file-item active"><i class="fa-solid fa-code"></i> index.html</div>
-      <div id="file-css" class="file-item"><i class="fa-solid fa-palette"></i> style.css</div>
-      <div id="file-js" class="file-item"><i class="fa-brands fa-js"></i> script.js</div>
+  <!-- Tampilan 1: Editor -->
+  <div id="editor-view" class="view-container active">
+    <div class="editor-header">
+      <button id="tab-html" class="active">index.html</button>
+      <button id="tab-css">style.css</button>
+      <button id="tab-js">script.js</button>
+    </div>
+    <div class="cm-container">
+      <textarea id="code-editor"></textarea>
+    </div>
+  </div>
+
+  <!-- Tampilan 2: Files -->
+  <div id="files-view" class="view-container">
+    <div class="files-header">
+        <button id="files-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Kembali</button>
     </div>
     <div class="panel-actions">
       <button id="import-btn"><i class="fa-solid fa-upload"></i> Impor File...</button>
       <button id="export-zip-btn"><i class="fa-solid fa-download"></i> Ekspor Proyek (.zip)</button>
     </div>
   </div>
-
-  <div id="right-panel">
-    <div id="editor-view" class="view-container active">
-      <div class="editor-header">
-        <button id="tab-html" class="active">index.html</button>
-        <button id="tab-css">style.css</button>
-        <button id="tab-js">script.js</button>
-      </div>
-      <div class="cm-container">
-        <textarea id="code-editor"></textarea>
-      </div>
-    </div>
-  </div>
 </main>
+
+<nav id="bottom-nav">
+  <button id="nav-editor" class="nav-btn active" title="Editor">
+    <i class="fa-solid fa-code"></i><span>Editor</span>
+  </button>
+  <button id="nav-files" class="nav-btn" title="Files">
+    <i class="fa-solid fa-folder-open"></i><span>Files</span>
+  </button>
+  <button id="nav-run" class="nav-btn" title="Run Preview">
+    <i class="fa-solid fa-play"></i><span>Run</span>
+  </button>
+</nav>
 
 <div id="preview-overlay">
   <div class="preview-header">
-    <button id="back-to-editor-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Tutup</button>
+    <button id="preview-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Tutup</button>
     <div class="preview-controls">
       <button id="desktop-view-btn" class="active" title="Desktop"><i class="fa-solid fa-desktop"></i></button>
       <button id="mobile-view-btn" title="Mobile"><i class="fa-solid fa-mobile-alt"></i></button>
@@ -145,8 +151,7 @@
       <iframe id="desktop-preview"></iframe>
     </div>
     <div id="iphone-frame">
-        <div class="volume-btn top"></div><div class="volume-btn bottom"></div><div class="power-btn"></div>
-        <div class="iphone-screen"><div class="iphone-notch"></div><iframe id="mobile-preview"></iframe></div>
+      <div class="iphone-screen"><div class="iphone-notch"></div><iframe id="mobile-preview"></iframe></div>
     </div>
   </div>
 </div>
@@ -165,20 +170,33 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === ELEMEN ===
     const elements = {
-      body: document.body,
-      nav: { files: document.getElementById('nav-files'), run: document.getElementById('nav-run') },
-      sidePanel: {
-        panel: document.getElementById('side-panel'),
-        fileHtml: document.getElementById('file-html'), fileCss: document.getElementById('file-css'), fileJs: document.getElementById('file-js'),
-        importBtn: document.getElementById('import-btn'), exportBtn: document.getElementById('export-zip-btn'),
+      nav: {
+        editor: document.getElementById('nav-editor'),
+        files: document.getElementById('nav-files'),
+        run: document.getElementById('nav-run'),
       },
-      editorTabs: { html: document.getElementById('tab-html'), css: document.getElementById('tab-css'), js: document.getElementById('tab-js') },
-      importerInput: document.getElementById('file-importer'),
+      views: {
+        editor: document.getElementById('editor-view'),
+        files: document.getElementById('files-view'),
+      },
+      editorTabs: {
+        html: document.getElementById('tab-html'), css: document.getElementById('tab-css'), js: document.getElementById('tab-js'),
+      },
+      files: {
+        backBtn: document.getElementById('files-back-btn'),
+        importBtn: document.getElementById('import-btn'),
+        exportBtn: document.getElementById('export-zip-btn'),
+        importerInput: document.getElementById('file-importer'),
+      },
       preview: {
-        overlay: document.getElementById('preview-overlay'), backBtn: document.getElementById('back-to-editor-btn'),
-        desktopBtn: document.getElementById('desktop-view-btn'), mobileBtn: document.getElementById('mobile-view-btn'),
-        desktopFrame: document.getElementById('desktop-frame'), mobileFrame: document.getElementById('iphone-frame'),
-        desktopIframe: document.getElementById('desktop-preview'), mobileIframe: document.getElementById('mobile-preview'),
+        overlay: document.getElementById('preview-overlay'),
+        backBtn: document.getElementById('preview-back-btn'),
+        desktopBtn: document.getElementById('desktop-view-btn'),
+        mobileBtn: document.getElementById('mobile-view-btn'),
+        desktopFrame: document.getElementById('desktop-frame'),
+        mobileFrame: document.getElementById('iphone-frame'),
+        desktopIframe: document.getElementById('desktop-preview'),
+        mobileIframe: document.getElementById('mobile-preview'),
       }
     };
     
@@ -188,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       css: `body {\n  padding: 1rem;\n  font-family: sans-serif;\n  line-height: 1.6;\n  text-align: center;\n}`,
       js: `console.log("Editor siap!");`
     };
-    const state = { currentLanguage: 'html', codeData: { ...defaultCode }, isSidePanelVisible: true };
+    const state = { currentLanguage: 'html', codeData: { ...defaultCode } };
 
     // === INISIALISASI EDITOR ===
     const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
@@ -198,12 +216,20 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.on('change', () => { state.codeData[state.currentLanguage] = editor.getValue(); });
 
     // === FUNGSI INTI ===
+    const switchMainView = (viewName) => {
+        document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        
+        elements.views[viewName].classList.add('active');
+        elements.nav[viewName].classList.add('active');
+        
+        if (viewName === 'editor') editor.refresh();
+    };
+    
     const switchLanguage = (lang) => {
       state.currentLanguage = lang;
       Object.values(elements.editorTabs).forEach(tab => tab.classList.remove('active'));
       elements.editorTabs[lang].classList.add('active');
-      document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
-      elements.sidePanel[`file${lang.charAt(0).toUpperCase() + lang.slice(1)}`].classList.add('active');
       editor.setOption('mode', lang === 'html' ? 'xml' : lang);
       editor.setValue(state.codeData[lang]);
       editor.focus();
@@ -211,31 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const togglePreview = (show) => {
         if (show) {
-            // INI PERBAIKANNYA: Menambahkan tag meta viewport di dalam srcdoc
-            const source = `
-                <!DOCTYPE html>
-                <html lang="id">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>${state.codeData.css}</style>
-                </head>
-                <body>
-                    ${state.codeData.html}
-                    <script>${state.codeData.js}<\/script>
-                </body>
-                </html>`;
+            const source = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${state.codeData.css}</style></head><body>${state.codeData.html}<script>${state.codeData.js}<\/script></body></html>`;
             elements.preview.desktopIframe.srcdoc = source;
             elements.preview.mobileIframe.srcdoc = source;
         }
         elements.preview.overlay.classList.toggle('active', show);
-    };
-
-    const toggleSidePanel = () => {
-        state.isSidePanelVisible = !state.isSidePanelVisible;
-        elements.body.classList.toggle('side-panel-visible', state.isSidePanelVisible);
-        elements.nav.files.classList.toggle('active', state.isSidePanelVisible);
-        setTimeout(() => editor.refresh(), 300); 
     };
 
     const switchPreviewDevice = (device) => {
@@ -254,51 +260,46 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (extension === 'css') lang = 'css';
         else if (extension === 'js') lang = 'js';
         else {
-            alert("Tipe file tidak didukung! Hanya .html, .css, atau .js");
-            return;
+            alert("Tipe file tidak didukung!"); return;
         }
+        
         const reader = new FileReader();
         reader.onload = (ev) => {
             state.codeData[lang] = ev.target.result;
             switchLanguage(lang);
+            switchMainView('editor');
             alert(`File ${file.name} berhasil diimpor!`);
         };
         reader.readAsText(file);
-        elements.importerInput.value = "";
+        elements.files.importerInput.value = "";
     };
     
     // === EVENT LISTENERS ===
-    elements.nav.files.onclick = toggleSidePanel;
+    elements.nav.editor.onclick = () => switchMainView('editor');
+    elements.nav.files.onclick = () => switchMainView('files');
+    elements.files.backBtn.onclick = () => switchMainView('editor');
     elements.nav.run.onclick = () => togglePreview(true);
-    elements.sidePanel.fileHtml.onclick = () => switchLanguage('html');
-    elements.sidePanel.fileCss.onclick = () => switchLanguage('css');
-    elements.sidePanel.fileJs.onclick = () => switchLanguage('js');
+    
     elements.editorTabs.html.onclick = () => switchLanguage('html');
     elements.editorTabs.css.onclick = () => switchLanguage('css');
     elements.editorTabs.js.onclick = () => switchLanguage('js');
+    
     elements.preview.backBtn.onclick = () => togglePreview(false);
     elements.preview.desktopBtn.onclick = () => switchPreviewDevice('desktop');
     elements.preview.mobileBtn.onclick = () => switchPreviewDevice('mobile');
-    elements.sidePanel.exportBtn.onclick = () => {
+    
+    elements.files.exportBtn.onclick = () => {
         const zip = new JSZip();
         zip.file("index.html", state.codeData.html);
         zip.file("style.css", state.codeData.css);
         zip.file("script.js", state.codeData.js);
         zip.generateAsync({type:"blob"}).then(content => saveAs(content, "proyek-kode.zip"));
     };
-    elements.sidePanel.importBtn.onclick = () => elements.importerInput.click();
-    elements.importerInput.onchange = (e) => handleImport(e.target.files[0]);
+    elements.files.importBtn.onclick = () => elements.files.importerInput.click();
+    elements.files.importerInput.onchange = (e) => handleImport(e.target.files[0]);
     
     // === INISIALISASI AWAL ===
-    const init = () => {
-        const isDesktop = window.innerWidth > 768;
-        state.isSidePanelVisible = isDesktop;
-        elements.body.classList.toggle('side-panel-visible', isDesktop);
-        elements.nav.files.classList.toggle('active', isDesktop);
-        switchPreviewDevice('desktop');
-    };
-
-    init();
+    switchPreviewDevice('desktop');
 });
 </script>
 </body>
