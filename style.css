@@ -1,293 +1,281 @@
 /* Reset dan dasar */
-
-- {
+* {
   box-sizing: border-box;
-  }
-
-body, html {
-margin: 0;
-padding: 0;
-height: 100vh;
-font-family: ‘Segoe UI’, Tahoma, Geneva, Verdana, sans-serif;
-background-color: #1e1e1e;
-color: #ddd;
-display: flex;
-overflow: hidden;
 }
-
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1e1e1e;
+  color: #ddd;
+  display: flex;
+  overflow: hidden;
+}
 /* Sidebar */
 #sidebar {
-width: 60px;
-background-color: #252526;
-display: flex;
-flex-direction: column;
-align-items: center;
-padding: 10px 0;
-border-right: 1px solid #333;
-flex-shrink: 0;
+  width: 50px;
+  background-color: #333333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  border-right: 1px solid #2d2d30;
+  flex-shrink: 0;
 }
-
 #sidebar button {
-background: none;
-border: none;
-color: #ccc;
-font-size: 16px;
-padding: 15px 0;
-width: 100%;
-cursor: pointer;
-border-left: 4px solid transparent;
-transition: all 0.3s ease;
-user-select: none;
-display: flex;
-align-items: center;
-justify-content: center;
-margin-bottom: 5px;
+  background: none;
+  border: none;
+  color: #cccccc;
+  font-size: 16px;
+  padding: 12px 0;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  position: relative;
 }
-
 #sidebar button:hover {
-background-color: #333;
-color: #fff;
+  color: #ffffff;
 }
-
 #sidebar button.active {
-border-left: 4px solid #007acc;
-color: #fff;
-background-color: #333;
+  color: #ffffff;
 }
-
+#sidebar button.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #007acc;
+}
 /* Main container */
 #main {
-flex: 1;
-display: flex;
-flex-direction: column;
-overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-
+/* File tabs */
+#file-tabs {
+  background: #2d2d30;
+  border-bottom: 1px solid #2d2d30;
+  display: flex;
+  align-items: center;
+  min-height: 35px;
+  overflow-x: auto;
+}
+.file-tab {
+  background: #2d2d30;
+  border: none;
+  color: #cccccc;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-right: 1px solid #2d2d30;
+  transition: all 0.2s ease;
+  user-select: none;
+  font-size: 13px;
+  white-space: nowrap;
+  position: relative;
+}
+.file-tab:hover {
+  background: #383838;
+  color: #ffffff;
+}
+.file-tab.active {
+  background: #1e1e1e;
+  color: #ffffff;
+  border-bottom: 2px solid #007acc;
+}
 /* Toolbar */
 #toolbar {
-background: #252526;
-border-bottom: 1px solid #333;
-padding: 8px 15px;
-display: flex;
-align-items: center;
-gap: 10px;
-flex-shrink: 0;
+  background: #383838;
+  border-bottom: 1px solid #2d2d30;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 30px;
 }
-
 #toolbar button {
-background: #007acc;
-border: none;
-color: white;
-padding: 8px 16px;
-border-radius: 4px;
-font-size: 13px;
-font-weight: 500;
-cursor: pointer;
-transition: all 0.2s ease;
-user-select: none;
+  background: #007acc;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
 }
-
 #toolbar button:hover {
-background: #1177bb;
-transform: translateY(-1px);
+  background: #1177bb;
 }
-
 #toolbar button.active {
-background: #005f9e;
-box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  background: #005f9e;
 }
-
+/* Layout container */
+#layout-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
 /* Editor container */
 #editor-container {
-flex: 1;
-background: #1e1e1e;
-display: flex;
-flex-direction: column;
-min-height: 0;
-overflow: hidden;
+  flex: 1;
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid #2d2d30;
 }
-
 /* CodeMirror styling */
 .CodeMirror {
-height: 100% !important;
-background-color: #1e1e1e !important;
-color: #d4d4d4 !important;
-font-family: ‘Cascadia Code’, Consolas, ‘Courier New’, monospace !important;
-font-size: 14px;
-line-height: 1.6;
-border: none;
-box-sizing: border-box;
+  height: 100% !important;
+  background-color: #1e1e1e !important;
+  color: #d4d4d4 !important;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, 'Courier New', monospace !important;
+  font-size: 14px;
+  line-height: 1.5;
+  border: none;
 }
-
 .CodeMirror-scroll {
-height: 100% !important;
-overflow-y: auto !important;
+  height: 100% !important;
 }
-
-/* Caret */
 .CodeMirror-cursor {
-border-left: 2px solid #aeafad !important;
+  border-left: 2px solid #aeafad !important;
 }
-
-/* Highlight baris aktif */
 .CodeMirror-activeline-background {
-background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
 }
-
-/* Nomor baris */
 .CodeMirror-gutters {
-background: #252526 !important;
-border-right: 1px solid #333 !important;
-color: #858585 !important;
-padding-right: 10px;
+  background: #1e1e1e !important;
+  border-right: 1px solid #2d2d30 !important;
+  color: #858585 !important;
+  padding-right: 10px;
 }
-
 .CodeMirror-linenumber {
-color: #858585 !important;
-padding: 0 8px 0 0;
+  color: #858585 !important;
+  padding: 0 8px 0 0;
 }
-
-/* Highlight tanda kurung */
 .CodeMirror-matchingbracket {
-text-decoration: underline;
-color: #ffd700 !important;
-font-weight: bold;
+  color: #ffd700 !important;
+  font-weight: bold;
 }
-
-/* Highlight selection */
 .CodeMirror-selected {
-background: #264f78 !important;
+  background: #264f78 !important;
 }
-
 /* Preview container */
 #preview-container {
-flex: 1;
-border-top: 1px solid #333;
-background: #111;
-display: flex;
-justify-content: center;
-align-items: center;
-padding: 20px;
-min-height: 300px;
-overflow: auto;
+  flex: 1;
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 300px;
 }
-
-/* Preview iframe styling untuk desktop */
+#preview-header {
+  background: #2d2d30;
+  padding: 8px 12px;
+  border-bottom: 1px solid #2d2d30;
+  color: #cccccc;
+  font-size: 12px;
+  font-weight: 500;
+}
+#preview-content {
+  flex: 1;
+  background: #1e1e1e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  overflow: auto;
+}
+/* Preview iframe untuk desktop */
 #desktop-preview {
-width: 100%;
-height: 100%;
-border: 1px solid #444;
-border-radius: 8px;
-background: white;
-box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  width: 100%;
+  height: 100%;
+  border: 1px solid #2d2d30;
+  background: white;
 }
-
-/* iPhone 14 Pro frame styling */
+/* iPhone frame */
 #iphone14pro-frame {
-width: 393px;  
-height: 852px;  
-background: #1c1c1e;
-border-radius: 47px;
-position: relative;
-overflow: hidden;
-box-shadow:
-0 0 0 2px #333,
-0 8px 40px rgba(0,0,0,0.6);
-display: flex;
-align-items: center;
-justify-content: center;
-flex-shrink: 0;
+  width: 375px;  
+  height: 667px;  
+  background: #000;
+  border-radius: 35px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  flex-shrink: 0;
 }
-
-/* Dynamic Island (notch) */
 #iphone14pro-frame::before {
-content: “”;
-position: absolute;
-top: 12px;
-left: 50%;
-transform: translateX(-50%);
-width: 125px;
-height: 30px;
-background: #000;
-border-radius: 20px;
-z-index: 10;
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 20px;
+  background: #000;
+  border-radius: 10px;
+  z-index: 10;
 }
-
-/* iPhone iframe inside frame */
 #iphone14pro-preview {
-width: calc(100% - 8px);
-height: calc(100% - 8px);
-border: none;
-border-radius: 42px;
-background: white;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border: none;
+  border-radius: 32px;
+  background: white;
+  margin: 3px;
 }
-
-/* Responsive design */
-@media (max-width: 768px) {
-body {
-flex-direction: column;
+/* Status bar */
+#status-bar {
+  background: #007acc;
+  color: white;
+  padding: 2px 12px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 22px;
 }
-
-#sidebar {
-width: 100%;
-height: 60px;
-flex-direction: row;
-padding: 0 10px;
-}
-
-#sidebar button {
-border-left: none;
-border-bottom: 4px solid transparent;
-padding: 0 15px;
-}
-
-#sidebar button.active {
-border-left: none;
-border-bottom: 4px solid #007acc;
-}
-
-#iphone14pro-frame {
-width: 300px;
-height: 650px;
-}
-
-#iphone14pro-frame::before {
-width: 100px;
-height: 25px;
-top: 10px;
-}
-}
-
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-width: 8px;
-height: 8px;
+  width: 8px;
+  height: 8px;
 }
-
 ::-webkit-scrollbar-track {
-background: #1e1e1e;
+  background: #1e1e1e;
 }
-
 ::-webkit-scrollbar-thumb {
-background: #444;
-border-radius: 4px;
+  background: #424242;
+  border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-background: #555;
+  background: #4f4f4f;
 }
-
-/* Loading animation */
-.loading {
-display: inline-block;
-width: 20px;
-height: 20px;
-border: 2px solid #333;
-border-radius: 50%;
-border-top-color: #007acc;
-animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-to { transform: rotate(360deg); }
+/* Responsive */
+@media (max-width: 768px) {
+  #layout-container {
+    flex-direction: column;
+  }
+  #editor-container {
+    border-right: none;
+    border-bottom: 1px solid #2d2d30;
+  }
+  #preview-container {
+    min-width: auto;
+  }
+  #iphone14pro-frame {
+    width: 280px;
+    height: 500px;
+  }
 }
