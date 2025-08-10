@@ -19,12 +19,12 @@
     margin: 0; padding: 0; height: 100%; width: 100%;
     font-family: -apple-system, 'Segoe UI', sans-serif;
     background-color: var(--bg-1); color: var(--text);
-    display: flex; overflow: hidden;
+    display: flex; flex-direction: column; overflow: hidden;
   }
 
   /* --- STRUKTUR UTAMA (MOBILE FIRST) --- */
   #main-content {
-    flex: 1; display: flex;
+    flex: 1; display: flex; overflow: hidden;
   }
   #bottom-bar {
     width: 100%; height: 55px; background-color: var(--bg-2);
@@ -46,20 +46,12 @@
     background-color: var(--bg-2); border-right: 1px solid var(--border);
   }
   body.side-panel-visible #side-panel { display: flex; }
-  .panel-header {
-    padding: 12px 15px; font-weight: 600; font-size: 14px; text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-  }
+  .panel-header { padding: 12px 15px; font-weight: 600; font-size: 14px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
   .file-list { padding: 5px; }
-  .file-item {
-    display: flex; align-items: center; gap: 8px; padding: 6px 10px;
-    border-radius: 4px; cursor: pointer;
-  }
+  .file-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
   .file-item:hover { background-color: var(--bg-3); }
   .file-item.active { background-color: var(--accent); color: white; }
-  .panel-actions {
-    padding: 15px; border-top: 1px solid var(--border); margin-top: auto;
-  }
+  .panel-actions { padding: 15px; border-top: 1px solid var(--border); margin-top: auto; }
   .panel-actions button {
     width: 100%; background-color: var(--accent); color: white;
     display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -67,32 +59,20 @@
     margin-bottom: 10px; font-weight: 600; font-size: 14px;
   }
 
-  /* PANEL KANAN (EDITOR / PREVIEW) */
-  #right-panel {
-    flex: 1; display: flex; flex-direction: column;
-  }
-  .view-container { display: none; height: 100%; flex-direction: column; }
-  .view-container.active { display: flex; }
-
-  /* Tampilan Editor */
-  #editor-view .editor-header { display: flex; background-color: var(--bg-3); flex-shrink: 0; }
-  #editor-view .editor-header button {
-    flex: 1; background: none; border: none; color: var(--text);
-    padding: 10px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent;
-  }
-  #editor-view .editor-header button.active { color: white; border-bottom-color: var(--accent); }
-  #editor-view .cm-container { flex: 1; position: relative; }
+  /* PANEL KANAN (EDITOR) */
+  #right-panel { flex: 1; display: flex; flex-direction: column; }
+  #editor-header { display: flex; background-color: var(--bg-3); flex-shrink: 0; }
+  #editor-header button { flex: 1; background: none; border: none; color: var(--text); padding: 10px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
+  #editor-header button.active { color: white; border-bottom-color: var(--accent); }
+  .cm-container { flex: 1; position: relative; }
   .CodeMirror { position: absolute; inset: 0; height: 100%; font-size: 14px; }
 
-  /* Tampilan Pratinjau (Overlay Fullscreen) */
-  #preview-overlay {
-    position: fixed; inset: 0; z-index: 1000;
-    display: none; flex-direction: column; background: var(--preview-bg);
-  }
+  /* PRATINJAU (OVERLAY) */
+  #preview-overlay { position: fixed; inset: 0; z-index: 1000; display: none; flex-direction: column; background: var(--preview-bg); }
   #preview-overlay.active { display: flex; }
-  .preview-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background-color:var(--bg-2);border-bottom:1px solid var(--border);flex-shrink:0}.preview-header .back-btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:600}.preview-controls button{background:none;border:1px solid var(--text);color:var(--text);padding:5px;width:38px;border-radius:4px;margin-left:5px}.preview-controls button.active{background:var(--accent);border-color:var(--accent)}.preview-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:15px}#desktop-frame{min-width:800px;width:95%;max-width:1200px;aspect-ratio:16/9;background:#fff;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:flex;flex-direction:column;margin:auto}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview{width:100%;height:100%;border:none}
+  .preview-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background-color:var(--bg-2);border-bottom:1px solid var(--border);flex-shrink:0}.preview-header .back-btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:600}.preview-controls button{background:none;border:1px solid var(--text);color:var(--text);padding:5px;width:38px;border-radius:4px;margin-left:5px}.preview-controls button.active{background:var(--accent);border-color:var(--accent)}.preview-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:15px}
+  #desktop-frame{min-width:800px;width:95%;max-width:1200px;aspect-ratio:16/9;background:#fff;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:flex;flex-direction:column;margin:auto}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview{width:100%;height:100%;border:none}
   #iphone-frame{width:280px;height:580px;flex-shrink:0;background:#111;border:4px solid #333;border-radius:40px;padding:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:none;position:relative}.iphone-screen{width:100%;height:100%;background:#fff;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}#mobile-preview{width:100%;height:100%;border:none}.volume-btn,.power-btn{position:absolute;background:#333}.volume-btn{width:3px;height:40px;left:-7px}.volume-btn.top{top:100px}.volume-btn.bottom{top:160px}.power-btn{width:3px;height:60px;right:-7px;top:120px}
-
 
   /* --- LAYOUT DESKTOP --- */
   @media (min-width: 769px) {
@@ -105,8 +85,7 @@
     }
     #main-content { order: 2; }
     #bottom-bar .nav-btn {
-      border-top: none; border-left: 3px solid transparent;
-      width: 100%;
+      border-top: none; border-left: 3px solid transparent; width: 100%;
     }
     #bottom-bar .nav-btn.active { border-left-color: var(--accent); }
     #bottom-bar .nav-btn span { display: none; }
@@ -162,22 +141,12 @@
   </div>
   <div class="preview-content">
     <div id="desktop-frame">
-      <div class="window-header">
-          <div class="window-controls">
-              <span class="control-btn close"></span>
-              <span class="control-btn minimize"></span>
-              <span class="control-btn maximize"></span>
-          </div>
-          <div class="address-bar"><span>localhost</span></div>
-      </div>
+      <div class="window-header"><div class="window-controls"><span class="control-btn close"></span><span class="control-btn minimize"></span><span class="control-btn maximize"></span></div><div class="address-bar"><span>localhost</span></div></div>
       <iframe id="desktop-preview"></iframe>
     </div>
     <div id="iphone-frame">
         <div class="volume-btn top"></div><div class="volume-btn bottom"></div><div class="power-btn"></div>
-        <div class="iphone-screen">
-            <div class="iphone-notch"></div>
-            <iframe id="mobile-preview"></iframe>
-        </div>
+        <div class="iphone-screen"><div class="iphone-notch"></div><iframe id="mobile-preview"></iframe></div>
     </div>
   </div>
 </div>
@@ -197,33 +166,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // === ELEMEN ===
     const elements = {
       body: document.body,
-      nav: {
-        files: document.getElementById('nav-files'),
-        run: document.getElementById('nav-run'),
-      },
+      nav: { files: document.getElementById('nav-files'), run: document.getElementById('nav-run') },
       sidePanel: {
         panel: document.getElementById('side-panel'),
-        fileHtml: document.getElementById('file-html'),
-        fileCss: document.getElementById('file-css'),
-        fileJs: document.getElementById('file-js'),
-        importBtn: document.getElementById('import-btn'),
-        exportBtn: document.getElementById('export-zip-btn'),
+        fileHtml: document.getElementById('file-html'), fileCss: document.getElementById('file-css'), fileJs: document.getElementById('file-js'),
+        importBtn: document.getElementById('import-btn'), exportBtn: document.getElementById('export-zip-btn'),
       },
-      editorTabs: {
-        html: document.getElementById('tab-html'),
-        css: document.getElementById('tab-css'),
-        js: document.getElementById('tab-js'),
-      },
+      editorTabs: { html: document.getElementById('tab-html'), css: document.getElementById('tab-css'), js: document.getElementById('tab-js') },
       importerInput: document.getElementById('file-importer'),
       preview: {
-        overlay: document.getElementById('preview-overlay'),
-        backBtn: document.getElementById('back-to-editor-btn'),
-        desktopBtn: document.getElementById('desktop-view-btn'),
-        mobileBtn: document.getElementById('mobile-view-btn'),
-        desktopFrame: document.getElementById('desktop-frame'),
-        mobileFrame: document.getElementById('iphone-frame'),
-        desktopIframe: document.getElementById('desktop-preview'),
-        mobileIframe: document.getElementById('mobile-preview'),
+        overlay: document.getElementById('preview-overlay'), backBtn: document.getElementById('back-to-editor-btn'),
+        desktopBtn: document.getElementById('desktop-view-btn'), mobileBtn: document.getElementById('mobile-view-btn'),
+        desktopFrame: document.getElementById('desktop-frame'), mobileFrame: document.getElementById('iphone-frame'),
+        desktopIframe: document.getElementById('desktop-preview'), mobileIframe: document.getElementById('mobile-preview'),
       }
     };
     
@@ -245,10 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // === FUNGSI INTI ===
     const switchLanguage = (lang) => {
       state.currentLanguage = lang;
-      // Update active state di header editor
       Object.values(elements.editorTabs).forEach(tab => tab.classList.remove('active'));
       elements.editorTabs[lang].classList.add('active');
-      // Update active state di side panel
       document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
       elements.sidePanel[`file${lang.charAt(0).toUpperCase() + lang.slice(1)}`].classList.add('active');
       editor.setOption('mode', lang === 'html' ? 'xml' : lang);
@@ -258,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const togglePreview = (show) => {
         if (show) {
-            // INI PERBAIKANNYA: Menambahkan tag meta viewport
+            // INI PERBAIKANNYA: Menambahkan tag meta viewport di dalam srcdoc
             const source = `
                 <!DOCTYPE html>
                 <html lang="id">
@@ -271,8 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${state.codeData.html}
                     <script>${state.codeData.js}<\/script>
                 </body>
-                </html>
-            `;
+                </html>`;
             elements.preview.desktopIframe.srcdoc = source;
             elements.preview.mobileIframe.srcdoc = source;
         }
@@ -283,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
         state.isSidePanelVisible = !state.isSidePanelVisible;
         elements.body.classList.toggle('side-panel-visible', state.isSidePanelVisible);
         elements.nav.files.classList.toggle('active', state.isSidePanelVisible);
-        // Refresh editor agar layoutnya menyesuaikan
         setTimeout(() => editor.refresh(), 300); 
     };
 
@@ -309,13 +260,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = (ev) => {
             state.codeData[lang] = ev.target.result;
-            // Jika di mobile, sembunyikan panel file setelah impor
-            if(window.innerWidth <= 768 && state.isSidePanelVisible) toggleSidePanel();
             switchLanguage(lang);
             alert(`File ${file.name} berhasil diimpor!`);
         };
         reader.readAsText(file);
-        elements.importerInput.value = ""; // Reset input
+        elements.importerInput.value = "";
     };
     
     // === EVENT LISTENERS ===
@@ -343,20 +292,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // === INISIALISASI AWAL ===
     const init = () => {
         const isDesktop = window.innerWidth > 768;
-        state.isSidePanelVisible = isDesktop; // Panel hanya terlihat di desktop secara default
+        state.isSidePanelVisible = isDesktop;
         elements.body.classList.toggle('side-panel-visible', isDesktop);
         elements.nav.files.classList.toggle('active', isDesktop);
-        
-        // Di mobile, tombol 'editor' tidak ada, jadi kita sembunyikan logicnya
-        // Di desktop, 'files' adalah tombol toggle, bukan tombol navigasi halaman
-        if (isDesktop) {
-            document.getElementById('nav-editor')?.remove(); // Hapus tombol editor jika ada (untuk layout desktop)
-        } else {
-            // Untuk mobile, kita perlu tombol editor
-            // Tapi karena kita tidak punya, kita akan pastikan 'files' tidak aktif
-            elements.nav.files.classList.remove('active');
-        }
-
         switchPreviewDevice('desktop');
     };
 
