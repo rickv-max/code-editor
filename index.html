@@ -2,227 +2,301 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VS Code Style Live Editor - Versi Final Stabil</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Code Editor Pro (Versi Bersih)</title>
+<!-- FONT AWESOME UNTUK IKON -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<!-- CODEMIRROR CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
+<!-- CODEMIRROR ADDON CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/matchesonscrollbar.css">
+
 <style>
+  :root {
+    --primary-bg: #1e1e1e;
+    --secondary-bg: #252526;
+    --border-color: #333;
+    --text-color: #ddd;
+    --accent-color: #007acc;
+  }
   * { box-sizing: border-box; }
   body, html {
     margin: 0; padding: 0; height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #1e1e1e; color: #ddd;
-    display: flex; overflow: hidden;
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    display: flex;
+    overflow: hidden;
   }
   #sidebar {
-    width: 60px; background-color: #252526; display: flex;
-    flex-direction: column; align-items: center; padding: 10px 0;
-    border-right: 1px solid #333;
+    width: 60px; background-color: var(--secondary-bg);
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: 10px; border-right: 1px solid var(--border-color);
+    z-index: 20;
   }
   #sidebar button {
     background: none; border: none; color: #ccc; font-size: 20px;
-    padding: 12px 0; width: 100%; cursor: pointer;
-    border-left: 4px solid transparent; transition: all 0.3s ease;
+    width: 100%; padding: 12px 0; cursor: pointer;
+    border-left: 4px solid transparent; transition: all 0.2s ease;
   }
-  #sidebar button:hover { background-color: #333; color: #fff; }
+  #sidebar button:hover { background-color: #37373d; }
   #sidebar button.active {
-    border-left: 4px solid #007acc; color: #fff; background-color: #333;
+    border-left-color: var(--accent-color); color: #fff;
+    background-color: #37373d;
   }
-  #main { flex: 1; display: flex; flex-direction: column; }
+  #main { flex: 1; display: flex; flex-direction: column; position: relative; }
+  
+  /* --- TOOLBAR DAN MENU BARU --- */
   #toolbar {
-    background: #1e1e1e; border-bottom: 1px solid #333;
-    padding: 5px 10px; display: flex; align-items: center; gap: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 10px; background-color: var(--secondary-bg);
+    border-bottom: 1px solid var(--border-color);
   }
-  #toolbar button {
-    background: #007acc; border: none; color: white; padding: 6px 12px;
-    border-radius: 3px; font-weight: 600; cursor: pointer;
-    transition: background 0.2s ease;
+  #toolbar .title { font-weight: 600; }
+  #menu-toggle-btn {
+    background: none; border: none; color: var(--text-color);
+    font-size: 20px; cursor: pointer; padding: 5px;
   }
-  #toolbar button:hover { background: #005f9e; }
-  #toolbar button#saveBtn { background-color: #3ea850; }
-  #toolbar button#saveBtn:hover { background-color: #2c7c3a; }
+  #dropdown-menu {
+    position: absolute; top: 40px; right: 10px;
+    background-color: #2d2d2d; border: 1px solid #444;
+    border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    z-index: 100; overflow: hidden;
+    display: none; /* Awalnya tersembunyi */
+  }
+  #dropdown-menu button {
+    display: flex; align-items: center; gap: 12px;
+    background: none; border: none; color: var(--text-color);
+    padding: 10px 15px; width: 100%; text-align: left;
+    cursor: pointer; border-bottom: 1px solid #444;
+  }
+  #dropdown-menu button:last-child { border-bottom: none; }
+  #dropdown-menu button:hover { background-color: var(--accent-color); }
+  #dropdown-menu button i { width: 20px; text-align: center; }
 
-  #editor-container { height: 55vh; background: #1e1e1e; }
-  .CodeMirror, .CodeMirror-scroll { height: 100% !important; width: 100% !important; }
-  .CodeMirror { color: #d4d4d4; background: #1e1e1e !important; }
-  .CodeMirror-cursor { border-left: 2px solid #aeafad !important; }
-  .CodeMirror-gutters { background: #1e1e1e !important; border-right: none !important; }
-  
-  #preview-container { height: 45vh; border-top: 1px solid #333; position: relative; overflow: hidden; }
-  #preview { width: 100%; height: 100%; border: none; background: white; display: block; }
-  
-  #iphone-frame {
-    position: absolute; width: 320px; height: 95%; max-height: 568px;
-    border: 12px solid black; border-radius: 40px; box-shadow: 0 0 15px rgba(0,0,0,0.7);
-    overflow: hidden; user-select: none; -webkit-user-select: none;
-    cursor: grab; background: black; z-index: 10; display: none;
-  }
-  #iphone-frame.dragging { cursor: grabbing; }
-  #iphone-preview { width: 100%; height: 100%; border: none; background: white; pointer-events: none; }
+  #editor-container { height: 55vh; }
+  #preview-container { height: calc(45vh - 36px); border-top: 1px solid var(--border-color); position: relative; overflow: hidden; }
+  .CodeMirror, .CodeMirror-scroll { height: 100% !important; width: 100% !important; background: var(--primary-bg) !important;}
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
 </head>
 <body>
 
 <div id="sidebar">
-  <button id="btn-html" class="active" title="HTML">&lt;/&gt;</button>
-  <button id="btn-css" title="CSS">🎨</button>
-  <button id="btn-js" title="JavaScript">JS</button>
+  <button id="btn-html" class="active" title="HTML"><i class="fa-solid fa-code"></i></button>
+  <button id="btn-css" title="CSS"><i class="fa-solid fa-palette"></i></button>
+  <button id="btn-js" title="JavaScript"><i class="fa-brands fa-js"></i></button>
+  <button id="btn-preview-toggle" title="Toggle Preview"><i class="fa-solid fa-mobile-screen-button"></i></button>
 </div>
 
 <div id="main">
+  <!-- Toolbar Baru -->
   <div id="toolbar">
-    <button id="saveBtn" title="Simpan Kode ke Memori Browser">Simpan</button>
-    <button id="formatBtn" title="Format Kode">Format Kode</button>
-    <button id="resetBtn" title="Reset Kode ke Default">Reset</button>
-    <button id="togglePreview" title="Toggle Preview Mode">Switch to Mobile Preview</button>
+    <div class="title">index.html</div>
+    <button id="menu-toggle-btn" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
   </div>
+  
+  <!-- Menu Dropdown Tersembunyi -->
+  <div id="dropdown-menu">
+    <button id="undo-btn"><i class="fa-solid fa-rotate-left"></i> Undo</button>
+    <button id="redo-btn"><i class="fa-solid fa-rotate-right"></i> Redo</button>
+    <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i> Cari</button>
+    <button id="goto-line-btn"><i class="fa-solid fa-arrow-right-to-line"></i> Pergi ke Baris</button>
+    <button id="color-picker-btn"><i class="fa-solid fa-eye-dropper"></i> Masukan Warna</button>
+    <button id="format-btn"><i class="fa-solid fa-align-left"></i> Format Kode</button>
+    <button id="wrap-text-btn"><i class="fa-solid fa-text-wrap"></i> Pembungkus Kata</button>
+    <button id="select-all-btn"><i class="fa-solid fa-check-double"></i> Pilih Semua</button>
+    <button id="reset-btn"><i class="fa-solid fa-arrow-rotate-back"></i> Reset Kode</button>
+  </div>
+  
+  <!-- Editor dan Pratinjau -->
   <div id="editor-container">
     <textarea id="code-editor"></textarea>
   </div>
   <div id="preview-container">
     <iframe id="preview"></iframe>
-    <div id="iphone-frame">
-      <iframe id="iphone-preview"></iframe>
-    </div>
   </div>
 </div>
 
+<!-- Input color picker tersembunyi -->
+<input type="color" id="hidden-color-input" style="display:none;">
+
+<!-- CODEMIRROR JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/js-beautify@1.14.0/js/lib/beautify.js"></script>
+<!-- CODEMIRROR ADDON JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/searchcursor.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/search.js"></script>
 
 <script>
-  const saveBtn = document.getElementById('saveBtn');
-  const btnHtml = document.getElementById('btn-html');
-  const btnCss = document.getElementById('btn-css');
-  const btnJs = document.getElementById('btn-js');
-  const preview = document.getElementById('preview');
-  const iphoneFrame = document.getElementById('iphone-frame');
-  const iphonePreview = document.getElementById('iphone-preview');
-  const formatBtn = document.getElementById('formatBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const togglePreviewBtn = document.getElementById('togglePreview');
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Elemen-elemen ---
+    const elements = {
+        sidebar: {
+            html: document.getElementById('btn-html'),
+            css: document.getElementById('btn-css'),
+            js: document.getElementById('btn-js'),
+            previewToggle: document.getElementById('btn-preview-toggle'),
+        },
+        main: {
+            title: document.querySelector('#toolbar .title'),
+            menuToggleBtn: document.getElementById('menu-toggle-btn'),
+            dropdownMenu: document.getElementById('dropdown-menu'),
+            editorContainer: document.getElementById('editor-container'),
+            previewContainer: document.getElementById('preview-container'),
+            previewFrame: document.getElementById('preview'),
+            hiddenColorInput: document.getElementById('hidden-color-input'),
+        },
+        menu: {
+            undo: document.getElementById('undo-btn'),
+            redo: document.getElementById('redo-btn'),
+            search: document.getElementById('search-btn'),
+            goToLine: document.getElementById('goto-line-btn'),
+            colorPicker: document.getElementById('color-picker-btn'),
+            format: document.getElementById('format-btn'),
+            wrapText: document.getElementById('wrap-text-btn'),
+            selectAll: document.getElementById('select-all-btn'),
+            reset: document.getElementById('reset-btn'),
+        }
+    };
 
-  const defaultCode = {
-    html: `<h1>Hello dari HTML!</h1>\n<p>Ini editor ala VS Code.</p>`,
-    css: `body {\n  font-family: Arial, sans-serif;\n  background: #f0f0f0;\n  color: #333;\n  padding: 20px;\n}`,
-    js: `console.log('JS aktif!');`
-  };
+    // --- State Aplikasi ---
+    const defaultCode = {
+        html: `<h1>Halo Dunia!</h1>\n<p>Edit kode ini untuk melihat hasilnya.</p>`,
+        css: `body {\n  padding: 1rem;\n  font-family: sans-serif;\n}`,
+        js: `console.log("Selamat datang di editor!");`
+    };
 
-  let codeData = JSON.parse(localStorage.getItem('codeData')) || { ...defaultCode };
-  const modeMap = { html: 'xml', css: 'css', js: 'javascript' };
-  let currentLanguage = 'html';
+    const state = {
+        currentLanguage: 'html',
+        isPreviewVisible: true,
+        // TIDAK ADA LAGI localStorage.getItem. Selalu mulai dengan default.
+        codeData: { ...defaultCode }, 
+    };
 
-  const textarea = document.getElementById('code-editor');
-  let editor = CodeMirror.fromTextArea(textarea, {
-    mode: modeMap[currentLanguage],
-    theme: 'dracula',
-    lineNumbers: true,
-    autoCloseBrackets: true,
-    matchBrackets: true,
-    indentUnit: 2
-  });
-  editor.setValue(codeData[currentLanguage]);
+    const modeMap = { html: 'xml', css: 'css', js: 'javascript' };
 
-  function switchLanguage(lang) {
-    codeData[currentLanguage] = editor.getValue();
-    currentLanguage = lang;
-    [btnHtml, btnCss, btnJs].forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`btn-${lang}`).classList.add('active');
-    editor.setOption('mode', modeMap[lang]);
-    editor.setValue(codeData[lang]);
-    editor.focus();
-  }
+    // --- Inisialisasi CodeMirror ---
+    const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+        mode: modeMap[state.currentLanguage],
+        theme: 'dracula',
+        lineNumbers: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        lineWrapping: false,
+        indentUnit: 2,
+    });
+    editor.setValue(state.codeData[state.currentLanguage]);
 
-  function updatePreview() {
-    const source = `
-      <!DOCTYPE html><html lang="id">
-      <head><meta charset="UTF-8"><style>${codeData.css}</style></head>
-      <body>
-        ${codeData.html}
-        <script>${codeData.js}<\/script>
-      </body></html>`;
-    preview.srcdoc = source;
-    iphonePreview.srcdoc = source;
-  }
-  
-  editor.on('change', () => {
-    codeData[currentLanguage] = editor.getValue();
+    // --- Fungsi-fungsi ---
+    const updatePreview = () => {
+        const source = `
+            <!DOCTYPE html><html lang="id">
+            <head><meta charset="UTF-8"><style>${state.codeData.css}</style></head>
+            <body>${state.codeData.html}<script>${state.codeData.js}<\/script></body>
+            </html>`;
+        elements.main.previewFrame.srcdoc = source;
+    };
+
+    const switchLanguage = (lang) => {
+        state.codeData[state.currentLanguage] = editor.getValue();
+        state.currentLanguage = lang;
+        
+        Object.values(elements.sidebar).forEach(btn => btn.classList.remove('active'));
+        elements.sidebar[lang].classList.add('active');
+        
+        elements.main.title.textContent = `index.${lang}`;
+        editor.setOption('mode', modeMap[lang]);
+        editor.setValue(state.codeData[lang]);
+        editor.focus();
+    };
+
+    const toggleMenu = (show) => {
+        elements.main.dropdownMenu.style.display = show ? 'block' : 'none';
+    };
+
+    const togglePreview = () => {
+        state.isPreviewVisible = !state.isPreviewVisible;
+        elements.main.editorContainer.style.height = state.isPreviewVisible ? '55vh' : 'calc(100vh - 36px)';
+        elements.main.previewContainer.style.display = state.isPreviewVisible ? 'block' : 'none';
+        editor.refresh();
+    };
+
+    // --- Event Listeners ---
+    editor.on('change', () => {
+        state.codeData[state.currentLanguage] = editor.getValue();
+        updatePreview();
+        // TIDAK ADA LAGI localStorage.setItem
+    });
+
+    // Sidebar
+    elements.sidebar.html.addEventListener('click', () => switchLanguage('html'));
+    elements.sidebar.css.addEventListener('click', () => switchLanguage('css'));
+    elements.sidebar.js.addEventListener('click', () => switchLanguage('js'));
+    elements.sidebar.previewToggle.addEventListener('click', togglePreview);
+
+    // Menu Toggle
+    elements.main.menuToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isMenuVisible = elements.main.dropdownMenu.style.display === 'block';
+        toggleMenu(!isMenuVisible);
+    });
+    window.addEventListener('click', () => toggleMenu(false));
+
+    // Aksi Menu
+    elements.menu.undo.addEventListener('click', () => editor.undo());
+    elements.menu.redo.addEventListener('click', () => editor.redo());
+    elements.menu.search.addEventListener('click', () => editor.execCommand('find'));
+    elements.menu.selectAll.addEventListener('click', () => editor.execCommand('selectAll'));
+    
+    elements.menu.goToLine.addEventListener('click', () => {
+        const line = prompt("Pergi ke baris nomor:", "");
+        if (line && !isNaN(line)) {
+            editor.setCursor(parseInt(line, 10) - 1, 0);
+            editor.focus();
+        }
+    });
+
+    elements.menu.wrapText.addEventListener('click', () => {
+        const isWrapping = !editor.getOption('lineWrapping');
+        editor.setOption('lineWrapping', isWrapping);
+        alert(`Pembungkus kata ${isWrapping ? 'diaktifkan' : 'dinonaktifkan'}.`);
+        editor.refresh();
+    });
+
+    elements.menu.format.addEventListener('click', () => {
+        const code = editor.getValue();
+        const options = { indent_size: 2, space_in_empty_paren: true };
+        let formatted = code;
+        if (state.currentLanguage === 'js') formatted = js_beautify.js(code, options);
+        else if (state.currentLanguage === 'html') formatted = js_beautify.html(code, options);
+        else if (state.currentLanguage === 'css') formatted = js_beautify.css(code, options);
+        editor.setValue(formatted);
+    });
+
+    elements.menu.colorPicker.addEventListener('click', () => elements.main.hiddenColorInput.click());
+    elements.main.hiddenColorInput.addEventListener('input', (e) => {
+        editor.replaceSelection(e.target.value);
+        editor.focus();
+    });
+
+    elements.menu.reset.addEventListener('click', () => {
+        if (confirm("Anda yakin ingin mereset kode? Semua perubahan akan hilang.")) {
+            // Logika reset yang baru: hanya reset state di memori
+            state.codeData = { ...defaultCode };
+            switchLanguage(state.currentLanguage); // Muat ulang kode default
+            updatePreview();
+        }
+    });
+
+    // Inisialisasi awal
     updatePreview();
-  });
-
-  saveBtn.addEventListener('click', () => {
-    localStorage.setItem('codeData', JSON.stringify(codeData));
-    alert('Kode berhasil disimpan di browser!');
-  });
-
-  formatBtn.addEventListener('click', () => {
-    let formatted;
-    const code = editor.getValue();
-    const options = { indent_size: 2, space_in_empty_paren: true };
-    if (currentLanguage === 'js') formatted = js_beautify.js(code, options);
-    else if (currentLanguage === 'html') formatted = js_beautify.html(code, options);
-    else if (currentLanguage === 'css') formatted = js_beautify.css(code, options);
-    if (formatted) editor.setValue(formatted);
-  });
-
-  resetBtn.addEventListener('click', () => {
-    if (confirm('Reset kode ke default? Perubahan yang belum disimpan akan hilang.')) {
-      localStorage.removeItem('codeData');
-      codeData = { ...defaultCode };
-      editor.setValue(codeData[currentLanguage]);
-    }
-  });
-
-  let previewMode = 'desktop';
-  togglePreviewBtn.addEventListener('click', () => {
-    previewMode = (previewMode === 'desktop') ? 'mobile' : 'desktop';
-    const isMobile = previewMode === 'mobile';
-    preview.style.display = isMobile ? 'none' : 'block';
-    iphoneFrame.style.display = isMobile ? 'block' : 'none';
-    togglePreviewBtn.textContent = isMobile ? 'Switch to Desktop Preview' : 'Switch to Mobile Preview';
-    if (isMobile) setInitialPosition();
-  });
-
-  let isDragging = false, offsetX, offsetY;
-  
-  function setInitialPosition() {
-    const container = iphoneFrame.parentElement;
-    if (container) {
-      iphoneFrame.style.left = `${(container.clientWidth - iphoneFrame.offsetWidth) / 2}px`;
-      iphoneFrame.style.top = `${(container.clientHeight - iphoneFrame.offsetHeight) / 2}px`;
-    }
-  }
-
-  iphoneFrame.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    offsetX = e.clientX - iphoneFrame.offsetLeft;
-    offsetY = e.clientY - iphoneFrame.offsetTop;
-    iphoneFrame.classList.add('dragging');
-    e.preventDefault();
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const container = iphoneFrame.parentElement;
-    const newLeft = e.clientX - offsetX;
-    const newTop = e.clientY - offsetY;
-    const maxLeft = container.clientWidth - iphoneFrame.offsetWidth;
-    const maxTop = container.clientHeight - iphoneFrame.offsetHeight;
-
-    iphoneFrame.style.left = `${Math.max(0, Math.min(newLeft, maxLeft))}px`;
-    iphoneFrame.style.top = `${Math.max(0, Math.min(newTop, maxTop))}px`;
-  });
-
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-    iphoneFrame.classList.remove('dragging');
-  });
-
-  updatePreview();
+});
 </script>
-
 </body>
 </html>
