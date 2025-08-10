@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Live Editor dengan Mode Desktop & iPhone 14 Pro Preview</title>
+<title>VS Code Live Editor</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
 <link rel="stylesheet" href="style.css" />
@@ -12,44 +11,55 @@
 <body>
 
 <div id="sidebar">
-  <button id="btn-html" class="active" title="HTML">&lt;/&gt;</button>
+  <button id="btn-html" class="active" title="HTML">📄</button>
   <button id="btn-css" title="CSS">🎨</button>
-  <button id="btn-js" title="JavaScript">JS</button>
+  <button id="btn-js" title="JavaScript">⚡</button>
 </div>
 
 <div id="main">
+  <div id="file-tabs">
+    <button class="file-tab active" id="tab-html">index.html</button>
+    <button class="file-tab" id="tab-css">style.css</button>
+    <button class="file-tab" id="tab-js">script.js</button>
+  </div>
+
   <div id="toolbar">
-    <button id="formatBtn" title="Format Kode">📄 Format</button>
-    <button id="modeDesktop" class="active" title="Mode Desktop">🖥️ Desktop</button>
-    <button id="modeIphone" title="Mode iPhone 14 Pro">📱 iPhone</button>
+    <button id="formatBtn" title="Format Code">🔧 Format</button>
+    <button id="modeDesktop" class="active" title="Desktop Preview">🖥️ Desktop</button>
+    <button id="modeIphone" title="Mobile Preview">📱 Mobile</button>
   </div>
-  <div id="editor-container">
-    <textarea id="code-editor"></textarea>
+
+  <div id="layout-container">
+    <div id="editor-container">
+      <textarea id="code-editor"></textarea>
+    </div>
+
+    <div id="preview-container">
+      <div id="preview-header">Live Preview</div>
+      <div id="preview-content"></div>
+    </div>
   </div>
-  <div id="preview-container"></div>
+
+  <div id="status-bar">
+    <span id="status-left">Ready</span>
+    <span id="status-right">Live Editor</span>
+  </div>
 </div>
 
+<!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closebrackets.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/selection/active-line.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify-css.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify-html.min.js"></script>
 
-<script src="app.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
