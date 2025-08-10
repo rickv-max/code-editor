@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VS Code Style Live Editor dengan Format</title>
+<title>VS Code Style Live Editor dengan Format & Preview Mobile Drag</title>
 <style>
   * { box-sizing: border-box; }
   body, html {
@@ -110,11 +110,27 @@
     box-shadow: 0 0 15px rgba(0,0,0,0.7);
     overflow: hidden;
     display: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    cursor: grab;
+  }
+  #iphone-frame.dragging {
+    cursor: grabbing;
   }
   #iphone-preview {
     width: 100%;
     height: 100%;
     border: none;
+  }
+  /* overlay supaya iframe gak nangkep event saat drag */
+  #drag-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: none;
+    background: transparent;
+    z-index: 10;
   }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
@@ -141,6 +157,7 @@
     <iframe id="preview"></iframe>
     <div id="iphone-frame">
       <iframe id="iphone-preview"></iframe>
+      <div id="drag-overlay"></div>
     </div>
   </div>
 </div>
@@ -161,24 +178,17 @@
   const formatBtn = document.getElementById('formatBtn');
   const resetBtn = document.getElementById('resetBtn');
   const togglePreviewBtn = document.getElementById('togglePreview');
+  const dragOverlay = document.getElementById('drag-overlay');
 
-  // Default kode (sesuai permintaanmu)
   const defaultCode = {
     html: `<h1>Hello dari HTML!</h1>\n<p>Ini editor ala VS Code.</p>`,
     css: `body { font-family: Arial, sans-serif; background: #1e1e1e; color: #ddd; padding: 20px; }`,
     js: `console.log('JS aktif!');`
   };
 
-  // Kode yang aktif di editor, mulai dari default
-  let codeData = {...defaultCode};
-
-  // Mapping mode untuk CodeMirror
+  let codeData = JSON.parse(localStorage.getItem('codeData')) || {...defaultCode};
   const modeMap = { html: 'xml', css: 'css', js: 'javascript' };
-
-  // Bahasa aktif sekarang
   let currentLanguage = 'html';
-
-  // Inisialisasi CodeMirror
   const textarea = document.getElementById('code-editor');
   let editor = CodeMirror.fromTextArea(textarea, {
     mode: modeMap[currentLanguage],
@@ -195,22 +205,16 @@
   editor.setValue(codeData[currentLanguage]);
 
   function switchLanguage(lang) {
-    // Simpan dulu kode yang sedang diedit
     codeData[currentLanguage] = editor.getValue();
     currentLanguage = lang;
-
-    // Update tombol active
     [btnHtml, btnCss, btnJs].forEach(btn => btn.classList.remove('active'));
     if(lang === 'html') btnHtml.classList.add('active');
     else if(lang === 'css') btnCss.classList.add('active');
     else btnJs.classList.add('active');
-
-    // Ganti mode editor dan tampilkan kode yang tersimpan
     editor.setOption('mode', modeMap[lang]);
     editor.setValue(codeData[lang]);
     editor.focus();
   }
-
   btnHtml.addEventListener('click', () => switchLanguage('html'));
   btnCss.addEventListener('click', () => switchLanguage('css'));
   btnJs.addEventListener('click', () => switchLanguage('js'));
@@ -232,13 +236,13 @@
 
   editor.on('change', () => {
     codeData[currentLanguage] = editor.getValue();
+    localStorage.setItem('codeData', JSON.stringify(codeData));
     updatePreview();
   });
 
   formatBtn.addEventListener('click', () => {
+    let formatted;
     const code = editor.getValue();
-    let formatted = code;
-
     if(currentLanguage === 'js') {
       formatted = js_beautify.js(code, { indent_size: 2 });
     } else if(currentLanguage === 'html') {
@@ -246,7 +250,6 @@
     } else if(currentLanguage === 'css') {
       formatted = js_beautify.css(code, { indent_size: 2 });
     }
-
     editor.setValue(formatted);
   });
 
@@ -254,6 +257,7 @@
     if(confirm('Reset kode ke default? Semua perubahan akan hilang.')) {
       codeData = {...defaultCode};
       editor.setValue(codeData[currentLanguage]);
+      localStorage.removeItem('codeData');
       updatePreview();
     }
   });
@@ -273,7 +277,58 @@
     }
   });
 
-  // Init preview awal
+  // Dragging logic for iphoneFrame
+  let isDragging = false;
+  let dragStartX, dragStartY;
+  let frameStartLeft = 0;
+  let frameStartTop = 0;
+
+  iphoneFrame.addEventListener('mousedown', e => {
+    e.preventDefault(); // cegah seleksi & copy
+    isDragging = true;
+    iphoneFrame.classList.add('dragging');
+    dragOverlay.style.display = 'block';
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+
+    const rect = iphoneFrame.getBoundingClientRect();
+    const parentRect = iphoneFrame.parentElement.getBoundingClientRect();
+    frameStartLeft = rect.left - parentRect.left;
+    frameStartTop = rect.top - parentRect.top;
+  });
+
+  window.addEventListener('mousemove', e => {
+    if(!isDragging) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+
+    let newLeft = frameStartLeft + dx;
+    let newTop = frameStartTop + dy;
+
+    // Batasi supaya gak keluar viewport parent
+    const parentRect = iphoneFrame.parentElement.getBoundingClientRect();
+    const maxLeft = parentRect.width - iphoneFrame.offsetWidth;
+    const maxTop = parentRect.height - iphoneFrame.offsetHeight;
+    if(newLeft < 0) newLeft = 0;
+    else if(newLeft > maxLeft) newLeft = maxLeft;
+    if(newTop < 0) newTop = 0;
+    else if(newTop > maxTop) newTop = maxTop;
+
+    iphoneFrame.style.left = newLeft + 'px';
+    iphoneFrame.style.top = newTop + 'px';
+  });
+
+  window.addEventListener('mouseup', e => {
+    if(isDragging) {
+      isDragging = false;
+      iphoneFrame.classList.remove('dragging');
+      dragOverlay.style.display = 'none';
+    }
+  });
+
+  // Cegah drag default browser supaya iframe tidak nge-drag
+  iphoneFrame.addEventListener('dragstart', e => e.preventDefault());
+
   updatePreview();
 </script>
 
