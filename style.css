@@ -1,0 +1,149 @@
+* {
+  box-sizing: border-box;
+}
+body, html {
+  margin: 0; padding: 0; height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1e1e1e;
+  color: #ddd;
+  display: flex;
+}
+
+/* Sidebar */
+#sidebar {
+  width: 60px;
+  background-color: #252526;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  border-right: 1px solid #333;
+}
+#sidebar button {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 20px;
+  padding: 12px 0;
+  width: 100%;
+  cursor: pointer;
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+}
+#sidebar button:hover {
+  background-color: #333;
+  color: #fff;
+}
+#sidebar button.active {
+  border-left: 4px solid #007acc;
+  color: #fff;
+  background-color: #333;
+}
+
+/* Main container */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar */
+#toolbar {
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#toolbar button {
+  background: #007acc;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+#toolbar button:hover {
+  background: #005f9e;
+}
+#toolbar button.active {
+  background: #005f9e;
+}
+
+/* Editor container fixed height */
+#editor-container {
+  height: 55vh;
+  background: #1e1e1e;
+  border-left: none;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pastikan CodeMirror container & wrapper punya ukuran tetap */
+.CodeMirror, .CodeMirror-scroll {
+  height: 100% !important;
+  min-height: 300px;
+  width: 100% !important;
+  min-width: 100%;
+}
+
+/* Preview container fixed height */
+#preview-container {
+  height: 40vh;
+  border-top: 1px solid #333;
+  padding: 10px;
+  background: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* iPhone 14 Pro frame styling */
+#iphone14pro-frame {
+  width: 393px;    
+  height: 852px;   
+  background: #000;
+  border-radius: 70px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.9);
+  position: relative;
+  overflow: hidden;
+  border: 24px solid black;
+  border-top-width: 70px;
+  border-bottom-width: 70px;
+}
+
+/* Notch styling */
+#iphone14pro-frame::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 210px;
+  height: 30px;
+  background: #111;
+  border-radius: 20px 20px 0 0;
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.7);
+  z-index: 10;
+}
+
+/* iPhone iframe inside frame */
+#iphone14pro-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 45px;
+  background: white;
+}
+
+/* Desktop iframe full width */
+#desktop-preview {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+}
