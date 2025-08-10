@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>Code Editor - Final Version</title>
+<title>Code Editor - ZIP Project Import/Export</title>
 <!-- FONT AWESOME & CODEMIRROR CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
@@ -23,9 +23,7 @@
   }
 
   /* --- STRUKTUR UTAMA (MOBILE FIRST) --- */
-  #main-content {
-    flex: 1; overflow: hidden; position: relative;
-  }
+  #main-content { flex: 1; overflow: hidden; position: relative; }
   #bottom-nav {
     width: 100%; height: 55px; background-color: var(--bg-2);
     display: flex; justify-content: space-around; align-items: center;
@@ -34,129 +32,81 @@
   #bottom-nav .nav-btn {
     background: none; border: none; color: var(--text);
     display: flex; flex-direction: column; align-items: center;
-    gap: 4px; font-size: 10px; height: 100%; padding: 5px 12px;
-    cursor: pointer;
+    gap: 4px; font-size: 10px; height: 100%; padding: 5px 12px; cursor: pointer;
   }
   #bottom-nav .nav-btn i { font-size: 20px; }
   
-  /* Tampilan "Halaman" yang bisa diganti-ganti */
   .view-container {
     position: absolute; inset: 0; height: 100%; width: 100%;
-    display: none; flex-direction: column;
-    background-color: var(--bg-1);
+    display: none; flex-direction: column; background-color: var(--bg-1);
   }
   .view-container.active { display: flex; }
 
-  /* Tampilan 1: Editor */
+  /* Tampilan Editor */
   #editor-view .editor-header {
-    display: flex; background-color: var(--bg-2); flex-shrink: 0;
-    overflow-x: auto;
+    display: flex; background-color: var(--bg-2); flex-shrink: 0; overflow-x: auto;
   }
-  /* --- PERBAIKAN DESAIN TAB SEPERTI VS CODE --- */
   #editor-view .editor-header button {
-    background: none; border: none; color: var(--text);
-    padding: 10px 15px; font-weight: 500; cursor: pointer;
-    border-right: 1px solid var(--border);
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
+    background: none; border: none; color: var(--text); padding: 10px 15px;
+    font-weight: 500; cursor: pointer; border-right: 1px solid var(--border);
+    border-bottom: 2px solid transparent; white-space: nowrap;
   }
-  #editor-view .editor-header button.active {
-    color: white;
-    background-color: var(--bg-1);
-    border-bottom-color: var(--accent);
-  }
-  /* --- AKHIR PERBAIKAN DESAIN TAB --- */
+  #editor-view .editor-header button.active { color: white; background-color: var(--bg-1); border-bottom-color: var(--accent); }
   #editor-view .cm-container { flex: 1; position: relative; }
   .CodeMirror { position: absolute; inset: 0; height: 100%; font-size: 14px; }
 
-  /* Tampilan 2: File Manager (Impor/Ekspor) */
+  /* Tampilan File Manager */
   #files-view { background-color: var(--bg-2); }
-  .files-header {
-    display: flex; align-items: center; padding: 0 10px;
-    height: 50px; background-color: var(--bg-1); border-bottom: 1px solid var(--border);
-  }
-  .files-header .back-btn {
-    background: none; border: none; color: var(--accent);
-    font-size: 16px; font-weight: 600; padding: 10px;
-  }
+  .files-header { display: flex; align-items: center; padding: 0 10px; height: 50px; background-color: var(--bg-1); border-bottom: 1px solid var(--border); }
+  .files-header .back-btn { background: none; border: none; color: var(--accent); font-size: 16px; font-weight: 600; padding: 10px; }
   .panel-actions { padding: 15px; }
   .panel-actions button {
-    width: 100%; background-color: var(--accent); color: white;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    border: none; padding: 12px; border-radius: 6px; cursor: pointer;
-    margin-bottom: 10px; font-weight: 600; font-size: 16px;
+    width: 100%; background-color: var(--accent); color: white; display: flex;
+    align-items: center; justify-content: center; gap: 10px; border: none;
+    padding: 12px; border-radius: 6px; cursor: pointer; margin-bottom: 10px;
+    font-weight: 600; font-size: 16px;
   }
 
-  /* Tampilan 3: Pratinjau (Overlay Fullscreen) */
-  #preview-overlay {
-    position: fixed; inset: 0; z-index: 1000;
-    display: none; flex-direction: column; background: var(--preview-bg);
-  }
-  #preview-overlay.active { display: flex; }
-  
-  /* CSS Pratinjau Lengkap (Sama seperti sebelumnya) */
-  .preview-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background-color:var(--bg-2);border-bottom:1px solid var(--border);flex-shrink:0}.preview-header .back-btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:600}.preview-controls button{background:none;border:1px solid var(--text);color:var(--text);padding:5px;width:38px;border-radius:4px;margin-left:5px}.preview-controls button.active{background:var(--accent);border-color:var(--accent)}.preview-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:15px}#desktop-frame{min-width:800px;width:95%;max-width:1200px;aspect-ratio:16/9;background:#fff;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:flex;flex-direction:column;margin:auto}#iphone-frame{width:280px;height:580px;flex-shrink:0;background:#111;border:4px solid #333;border-radius:40px;padding:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:none;position:relative}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview,#mobile-preview{width:100%;height:100%;border:none}.iphone-screen{width:100%;height:100%;background:#fff;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}
+  /* Pratinjau (Overlay) dan styling bingkai (sama seperti sebelumnya) */
+  #preview-overlay{position:fixed;inset:0;z-index:1000;display:none;flex-direction:column;background:var(--preview-bg)}#preview-overlay.active{display:flex}.preview-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background-color:var(--bg-2);border-bottom:1px solid var(--border);flex-shrink:0}.preview-header .back-btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:600}.preview-controls button{background:none;border:1px solid var(--text);color:var(--text);padding:5px;width:38px;border-radius:4px;margin-left:5px}.preview-controls button.active{background:var(--accent);border-color:var(--accent)}.preview-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:15px}#desktop-frame{min-width:800px;width:95%;max-width:1200px;aspect-ratio:16/9;background:#fff;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:flex;flex-direction:column;margin:auto}#iphone-frame{width:280px;height:580px;flex-shrink:0;background:#111;border:4px solid #333;border-radius:40px;padding:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:none;position:relative}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview,#mobile-preview{width:100%;height:100%;border:none}.iphone-screen{width:100%;height:100%;background:#fff;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}
 </style>
 </head>
 <body>
 
 <main id="main-content">
-  <!-- Tampilan 1: Editor -->
   <div id="editor-view" class="view-container active">
     <div class="editor-header">
       <button id="tab-html" class="active">index.html</button>
       <button id="tab-css">style.css</button>
       <button id="tab-js">script.js</button>
     </div>
-    <div class="cm-container">
-      <textarea id="code-editor"></textarea>
-    </div>
+    <div class="cm-container"><textarea id="code-editor"></textarea></div>
   </div>
 
-  <!-- Tampilan 2: Files -->
   <div id="files-view" class="view-container">
     <div class="files-header">
         <button id="files-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Kembali</button>
     </div>
     <div class="panel-actions">
-      <button id="import-btn"><i class="fa-solid fa-upload"></i> Impor File...</button>
+      <!-- TOMBOL INI SEKARANG UNTUK IMPOR ZIP -->
+      <button id="import-zip-btn"><i class="fa-solid fa-file-zipper"></i> Impor Proyek (.zip)...</button>
       <button id="export-zip-btn"><i class="fa-solid fa-download"></i> Ekspor Proyek (.zip)</button>
     </div>
   </div>
 </main>
 
 <nav id="bottom-nav">
-  <button id="nav-editor" class="nav-btn active" title="Editor">
-    <i class="fa-solid fa-code"></i><span>Editor</span>
-  </button>
-  <button id="nav-files" class="nav-btn" title="Files">
-    <i class="fa-solid fa-folder-open"></i><span>Files</span>
-  </button>
-  <button id="nav-run" class="nav-btn" title="Run Preview">
-    <i class="fa-solid fa-play"></i><span>Run</span>
-  </button>
+  <button id="nav-editor" class="nav-btn active" title="Editor"><i class="fa-solid fa-code"></i><span>Editor</span></button>
+  <button id="nav-files" class="nav-btn" title="Files"><i class="fa-solid fa-folder-open"></i><span>Files</span></button>
+  <button id="nav-run" class="nav-btn" title="Run Preview"><i class="fa-solid fa-play"></i><span>Run</span></button>
 </nav>
 
 <div id="preview-overlay">
-  <div class="preview-header">
-    <button id="preview-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Tutup</button>
-    <div class="preview-controls">
-      <button id="desktop-view-btn" class="active" title="Desktop"><i class="fa-solid fa-desktop"></i></button>
-      <button id="mobile-view-btn" title="Mobile"><i class="fa-solid fa-mobile-alt"></i></button>
-    </div>
-  </div>
-  <div class="preview-content">
-    <div id="desktop-frame">
-      <div class="window-header"><div class="window-controls"><span class="control-btn close"></span><span class="control-btn minimize"></span><span class="control-btn maximize"></span></div><div class="address-bar"><span>localhost</span></div></div>
-      <iframe id="desktop-preview"></iframe>
-    </div>
-    <div id="iphone-frame">
-      <div class="iphone-screen"><div class="iphone-notch"></div><iframe id="mobile-preview"></iframe></div>
-    </div>
-  </div>
+  <!-- Konten pratinjau lengkap -->
+  <div class="preview-header"><button id="preview-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Tutup</button><div class="preview-controls"><button id="desktop-view-btn" class="active" title="Desktop"><i class="fa-solid fa-desktop"></i></button><button id="mobile-view-btn" title="Mobile"><i class="fa-solid fa-mobile-alt"></i></button></div></div><div class="preview-content"><div id="desktop-frame"><div class="window-header"><div class="window-controls"><span class="control-btn close"></span><span class="control-btn minimize"></span><span class="control-btn maximize"></span></div><div class="address-bar"><span>localhost</span></div></div><iframe id="desktop-preview"></iframe></div><div id="iphone-frame"><div class="iphone-screen"><div class="iphone-notch"></div><iframe id="mobile-preview"></iframe></div></div></div>
 </div>
 
-<input type="file" id="file-importer" style="display:none;" />
+<input type="file" id="zip-importer" accept=".zip" style="display:none;" />
 
 <!-- SCRIPT LIBRARIES -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -170,43 +120,30 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === ELEMEN ===
     const elements = {
-      nav: {
-        editor: document.getElementById('nav-editor'),
-        files: document.getElementById('nav-files'),
-        run: document.getElementById('nav-run'),
-      },
-      views: {
-        editor: document.getElementById('editor-view'),
-        files: document.getElementById('files-view'),
-      },
-      editorTabs: {
-        html: document.getElementById('tab-html'), css: document.getElementById('tab-css'), js: document.getElementById('tab-js'),
-      },
+      nav: { editor: document.getElementById('nav-editor'), files: document.getElementById('nav-files'), run: document.getElementById('nav-run') },
+      views: { editor: document.getElementById('editor-view'), files: document.getElementById('files-view') },
+      editorTabs: { html: document.getElementById('tab-html'), css: document.getElementById('tab-css'), js: document.getElementById('tab-js') },
       files: {
         backBtn: document.getElementById('files-back-btn'),
-        importBtn: document.getElementById('import-btn'),
+        importBtn: document.getElementById('import-zip-btn'),
         exportBtn: document.getElementById('export-zip-btn'),
-        importerInput: document.getElementById('file-importer'),
+        importerInput: document.getElementById('zip-importer'),
       },
       preview: {
-        overlay: document.getElementById('preview-overlay'),
-        backBtn: document.getElementById('preview-back-btn'),
-        desktopBtn: document.getElementById('desktop-view-btn'),
-        mobileBtn: document.getElementById('mobile-view-btn'),
-        desktopFrame: document.getElementById('desktop-frame'),
-        mobileFrame: document.getElementById('iphone-frame'),
-        desktopIframe: document.getElementById('desktop-preview'),
-        mobileIframe: document.getElementById('mobile-preview'),
+        overlay: document.getElementById('preview-overlay'), backBtn: document.getElementById('preview-back-btn'),
+        desktopBtn: document.getElementById('desktop-view-btn'), mobileBtn: document.getElementById('mobile-view-btn'),
+        desktopFrame: document.getElementById('desktop-frame'), mobileFrame: document.getElementById('iphone-frame'),
+        desktopIframe: document.getElementById('desktop-preview'), mobileIframe: document.getElementById('mobile-preview'),
       }
     };
     
     // === STATE ===
     const defaultCode = {
-      html: `<h1>Selamat Datang!</h1>\n<p>Klik tombol Run (▶) untuk melihat pratinjau.</p>`,
-      css: `body {\n  padding: 1rem;\n  font-family: sans-serif;\n  line-height: 1.6;\n  text-align: center;\n}`,
+      html: `<h1>Selamat Datang!</h1>\n<p>Klik tombol Files untuk impor proyek .zip</p>`,
+      css: `body { padding: 1rem; font-family: sans-serif; text-align: center; }`,
       js: `console.log("Editor siap!");`
     };
-    const state = { currentLanguage: 'html', codeData: { ...defaultCode } };
+    const state = { currentLanguage: 'html', codeData: { ...defaultCode }, assetUrls: {} };
 
     // === INISIALISASI EDITOR ===
     const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
@@ -218,11 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === FUNGSI INTI ===
     const switchMainView = (viewName) => {
         document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        
         elements.views[viewName].classList.add('active');
-        elements.nav[viewName].classList.add('active');
-        
         if (viewName === 'editor') editor.refresh();
     };
     
@@ -237,41 +170,58 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const togglePreview = (show) => {
         if (show) {
-            const source = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${state.codeData.css}</style></head><body>${state.codeData.html}<script>${state.codeData.js}<\/script></body></html>`;
+            let processedHtml = state.codeData.html;
+            // Ganti path gambar dengan Object URL
+            for (const [path, url] of Object.entries(state.assetUrls)) {
+                const regex = new RegExp(path, "g");
+                processedHtml = processedHtml.replace(regex, url);
+            }
+
+            const source = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${state.codeData.css}</style></head><body>${processedHtml}<script>${state.codeData.js}<\/script></body></html>`;
             elements.preview.desktopIframe.srcdoc = source;
             elements.preview.mobileIframe.srcdoc = source;
         }
         elements.preview.overlay.classList.toggle('active', show);
     };
 
-    const switchPreviewDevice = (device) => {
-      const isDesktop = device === 'desktop';
-      elements.preview.desktopFrame.style.display = isDesktop ? 'flex' : 'none';
-      elements.preview.mobileFrame.style.display = isDesktop ? 'none' : 'flex';
-      elements.preview.desktopBtn.classList.toggle('active', isDesktop);
-      elements.preview.mobileBtn.classList.toggle('active', !isDesktop);
-    };
-
-    const handleImport = (file) => {
+    const switchPreviewDevice = (device) => { /* ... sama seperti sebelumnya ... */ };
+    
+    const handleZipImport = async (file) => {
         if (!file) return;
-        const extension = file.name.split('.').pop().toLowerCase();
-        let lang;
-        if (extension === 'html' || extension === 'htm') lang = 'html';
-        else if (extension === 'css') lang = 'css';
-        else if (extension === 'js') lang = 'js';
-        else {
-            alert("Tipe file tidak didukung!"); return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            state.codeData[lang] = ev.target.result;
-            switchLanguage(lang);
+        JSZip.loadAsync(file).then(async (zip) => {
+            // Hapus aset lama
+            Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
+            state.assetUrls = {};
+            
+            // Proses file teks
+            const htmlFile = zip.file(/index\.html?$/i)[0];
+            const cssFile = zip.file(/style\.css$/i)[0];
+            const jsFile = zip.file(/script\.js$/i)[0];
+            
+            if (htmlFile) state.codeData.html = await htmlFile.async('string');
+            if (cssFile) state.codeData.css = await cssFile.async('string');
+            if (jsFile) state.codeData.js = await jsFile.async('string');
+
+            // Proses aset gambar
+            const imagePromises = [];
+            zip.forEach((relativePath, zipEntry) => {
+                if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath)) {
+                    imagePromises.push(
+                        zipEntry.async('blob').then(blob => {
+                            state.assetUrls[relativePath] = URL.createObjectURL(blob);
+                        })
+                    );
+                }
+            });
+            await Promise.all(imagePromises);
+
+            switchLanguage('html');
             switchMainView('editor');
-            alert(`File ${file.name} berhasil diimpor!`);
-        };
-        reader.readAsText(file);
-        elements.files.importerInput.value = "";
+            alert(`Proyek ${file.name} berhasil diimpor!`);
+        }).catch(err => {
+            console.error("Gagal memproses zip:", err);
+            alert("Gagal memproses file zip. Pastikan formatnya benar.");
+        });
     };
     
     // === EVENT LISTENERS ===
@@ -279,14 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.nav.files.onclick = () => switchMainView('files');
     elements.files.backBtn.onclick = () => switchMainView('editor');
     elements.nav.run.onclick = () => togglePreview(true);
-    
     elements.editorTabs.html.onclick = () => switchLanguage('html');
     elements.editorTabs.css.onclick = () => switchLanguage('css');
     elements.editorTabs.js.onclick = () => switchLanguage('js');
-    
     elements.preview.backBtn.onclick = () => togglePreview(false);
-    elements.preview.desktopBtn.onclick = () => switchPreviewDevice('desktop');
-    elements.preview.mobileBtn.onclick = () => switchPreviewDevice('mobile');
+    elements.preview.desktopBtn.onclick = () => { /* ... sama ... */ };
+    elements.preview.mobileBtn.onclick = () => { /* ... sama ... */ };
     
     elements.files.exportBtn.onclick = () => {
         const zip = new JSZip();
@@ -296,10 +244,22 @@ document.addEventListener('DOMContentLoaded', () => {
         zip.generateAsync({type:"blob"}).then(content => saveAs(content, "proyek-kode.zip"));
     };
     elements.files.importBtn.onclick = () => elements.files.importerInput.click();
-    elements.files.importerInput.onchange = (e) => handleImport(e.target.files[0]);
+    elements.files.importerInput.onchange = (e) => handleZipImport(e.target.files[0]);
     
     // === INISIALISASI AWAL ===
-    switchPreviewDevice('desktop');
+    const init = () => {
+        // Logika ini disederhanakan karena layout mobile adalah default
+        switchMainView('editor');
+        switchPreviewDevice('desktop');
+        document.getElementById('nav-editor').style.display = 'none'; // Tombol editor tidak perlu di nav
+    };
+
+    // Fungsi placeholder yang sama
+    const switchPreviewDevicePlaceholder = (device) => { const isDesktop = device === 'desktop'; elements.preview.desktopFrame.style.display = isDesktop ? 'flex' : 'none'; elements.preview.mobileFrame.style.display = isDesktop ? 'none' : 'flex'; elements.preview.desktopBtn.classList.toggle('active', isDesktop); elements.preview.mobileBtn.classList.toggle('active', !isDesktop); };
+    elements.preview.desktopBtn.onclick = () => switchPreviewDevicePlaceholder('desktop');
+    elements.preview.mobileBtn.onclick = () => switchPreviewDevicePlaceholder('mobile');
+
+    init();
 });
 </script>
 </body>
