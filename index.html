@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>Code Editor Pro - Final Version</title>
-<!-- FONT AWESOME UNTUK IKON -->
+<title>Code Editor Pro - Final Responsive</title>
+<!-- FONT AWESOME & CODEMIRROR CSS (Sama) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-<!-- CODEMIRROR CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.css">
@@ -18,42 +17,36 @@
   }
   * { box-sizing: border-box; }
   body, html {
-    margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
-    background-color: var(--primary-bg); color: var(--text-color); display: flex; overflow: hidden;
+    margin: 0; padding: 0; height: 100vh; font-family: -apple-system, 'Segoe UI', sans-serif;
+    background-color: var(--primary-bg); color: var(--text-color); display: flex; flex-direction: column; overflow: hidden;
   }
   #sidebar {
-    width: 60px; background-color: var(--secondary-bg); display: flex; flex-direction: column;
-    align-items: center; padding-top: 10px; border-right: 1px solid var(--border-color); z-index: 20;
+    width: 100%; height: 50px; background-color: var(--secondary-bg); display: flex;
+    flex-direction: row; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color); order: 2; /* Pindah ke bawah */
   }
   #sidebar button {
-    background: none; border: none; color: #ccc; font-size: 20px; width: 100%;
-    padding: 12px 0; cursor: pointer; border-left: 4px solid transparent; transition: all 0.2s ease;
+    background: none; border: none; color: #ccc; font-size: 20px;
+    height: 100%; padding: 0 10px; cursor: pointer;
+    border-bottom: 4px solid transparent; transition: all 0.2s ease;
   }
-  #sidebar button:hover { background-color: #37373d; }
-  #sidebar button.active { border-left-color: var(--accent-color); color: #fff; background-color: #37373d; }
+  #sidebar button.active { border-bottom-color: var(--accent-color); color: #fff; }
   
-  #main { flex: 1; display: flex; flex-direction: column; }
-  
-  /* --- PANEL KONTEN UTAMA --- */
+  #main { flex: 1; display: flex; flex-direction: column; order: 1; /* Pindah ke atas */ }
   #content-panel { flex: 1; position: relative; }
-  
-  /* 1. Wrapper untuk Editor */
   #editor-wrapper { height: 100%; }
-  .CodeMirror { height: 100%; background: var(--primary-bg) !important; }
+  .CodeMirror { height: 100%; background: var(--primary-bg) !important; font-size: 14px; }
 
-  /* 2. Wrapper untuk Pratinjau (Awalnya tersembunyi) */
   #preview-wrapper {
-    height: 100%; display: none; /* SANGAT PENTING */
-    flex-direction: column; background: var(--preview-bg);
+    height: 100%; display: none; flex-direction: column; background: var(--preview-bg);
   }
   .preview-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 6px 10px; background-color: var(--secondary-bg);
-    border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center; padding: 6px 10px;
+    background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0;
   }
   .preview-header button {
-    background: var(--accent-color); color: white; border: none;
-    padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: 600;
+    background: var(--accent-color); color: white; border: none; padding: 5px 10px;
+    border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;
   }
   .preview-controls button {
     background: none; border: 1px solid var(--text-color); color: var(--text-color);
@@ -62,38 +55,83 @@
   .preview-controls button.active { background: var(--accent-color); border-color: var(--accent-color); }
   
   .preview-content {
-    flex: 1; position: relative; overflow: hidden;
-    padding: 20px; display: flex; align-items: center; justify-content: center;
+    flex: 1; position: relative; display: flex;
+    align-items: center; justify-content: center;
+    overflow: auto; /* PENTING: Mengizinkan scroll */
+    padding: 10px;
   }
 
-  /* Tampilan Desktop & Mobile (Sama seperti sebelumnya, tapi di dalam .preview-content) */
-  #desktop-frame { /* ... styling sama ... */ }
-  #iphone-frame { /* ... styling sama ... */ }
+  /* --- PERBAIKAN PRATINJAU DESKTOP LEBAR --- */
+  #desktop-frame {
+    /* Tetapkan lebar minimum yang lebih besar dari layar HP */
+    min-width: 800px;
+    width: 98%;
+    max-width: 1200px; /* Batas atas agar tidak terlalu lebar di monitor besar */
+    aspect-ratio: 16 / 9;
+    background: #fff; border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    display: flex; flex-direction: column;
+    margin: auto; /* Selalu di tengah kontainer scroll */
+  }
+  
+  /* --- PERBAIKAN PRATINJAU PONSEL DI TENGAH --- */
+  #iphone-frame {
+    /* Hapus position: absolute. Biarkan flexbox yang mengatur. */
+    width: 280px;
+    height: 580px;
+    flex-shrink: 0; /* Mencegah bingkai menyusut */
+    background: #111; border: 4px solid #333; border-radius: 40px;
+    padding: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    display: none; /* Awalnya tersembunyi */
+  }
+  
+  /* Styling minor (Sama seperti sebelumnya) */
+  .window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview{width:100%;height:100%;border:none}
+  .iphone-screen{width:100%;height:100%;background:white;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}#mobile-preview{width:100%;height:100%;border:none}.volume-btn,.power-btn{position:absolute;background:#333}.volume-btn{width:3px;height:40px;left:-7px}.volume-btn.top{top:100px}.volume-btn.bottom{top:160px}.power-btn{width:3px;height:60px;right:-7px;top:120px}
 
-  /* Salin-tempel styling dari versi sebelumnya untuk desktop dan iphone */
-  #desktop-frame{width:95%;height:95%;background:#fff;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,0.4);display:flex;flex-direction:column}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview{width:100%;height:100%;border:none}#iphone-frame{position:absolute;width:280px;height:580px;background:#111;border:4px solid #333;border-radius:40px;padding:10px;box-shadow:0 8px 30px rgba(0,0,0,0.4);cursor:grab;display:none}.iphone-frame:active{cursor:grabbing}.iphone-screen{width:100%;height:100%;background:white;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}#mobile-preview{width:100%;height:100%;border:none}.volume-btn,.power-btn{position:absolute;background:#333}.volume-btn{width:3px;height:40px;left:-7px}.volume-btn.top{top:100px}.volume-btn.bottom{top:160px}.power-btn{width:3px;height:60px;right:-7px;top:120px}
+  /* Untuk layar desktop, kembalikan sidebar ke samping */
+  @media (min-width: 769px) {
+    body {
+      flex-direction: row;
+    }
+    #sidebar {
+      order: 1;
+      width: 60px;
+      height: 100%;
+      flex-direction: column;
+      border-top: none;
+      border-right: 1px solid var(--border-color);
+      justify-content: flex-start;
+      padding-top: 10px;
+    }
+    #main {
+      order: 2;
+    }
+    #sidebar button {
+      border-bottom: none;
+      border-left: 4px solid transparent;
+      padding: 12px 0;
+    }
+     #sidebar button.active {
+      border-left-color: var(--accent-color);
+    }
+  }
+
 </style>
 </head>
 <body>
-
+<!-- HTML TETAP SAMA PERSIS -->
 <div id="sidebar">
   <button id="btn-html" class="active" title="HTML"><i class="fa-solid fa-code"></i></button>
   <button id="btn-css" title="CSS"><i class="fa-solid fa-palette"></i></button>
   <button id="btn-js" title="JavaScript"><i class="fa-brands fa-js"></i></button>
   <button id="btn-run" title="Jalankan Pratinjau"><i class="fa-solid fa-play"></i></button>
 </div>
-
 <div id="main">
   <div id="content-panel">
-    <!-- 1. Tampilan Editor -->
-    <div id="editor-wrapper">
-      <textarea id="code-editor"></textarea>
-    </div>
-    
-    <!-- 2. Tampilan Pratinjau (Tersembunyi) -->
+    <div id="editor-wrapper"><textarea id="code-editor"></textarea></div>
     <div id="preview-wrapper">
       <div class="preview-header">
-        <button id="back-to-editor-btn"><i class="fa-solid fa-chevron-left"></i> Kembali ke Editor</button>
+        <button id="back-to-editor-btn"><i class="fa-solid fa-chevron-left"></i> Editor</button>
         <div class="preview-controls">
           <button id="desktop-view-btn" class="active" title="Tampilan Desktop"><i class="fa-solid fa-desktop"></i></button>
           <button id="mobile-view-btn" title="Tampilan Mobile"><i class="fa-solid fa-mobile-alt"></i></button>
@@ -101,132 +139,43 @@
       </div>
       <div class="preview-content">
         <div id="desktop-frame">
-          <div class="window-header">
-            <div class="window-controls"><span class="control-btn close"></span><span class="control-btn minimize"></span><span class="control-btn maximize"></span></div>
-            <div class="address-bar"><span>localhost:8080</span></div>
-          </div>
+          <div class="window-header"><div class="window-controls"><span class="control-btn close"></span><span class="control-btn minimize"></span><span class="control-btn maximize"></span></div><div class="address-bar"><span>localhost:8080</span></div></div>
           <iframe id="desktop-preview"></iframe>
         </div>
         <div id="iphone-frame">
           <div class="volume-btn top"></div><div class="volume-btn bottom"></div><div class="power-btn"></div>
-          <div class="iphone-screen">
-            <div class="iphone-notch"></div>
-            <iframe id="mobile-preview"></iframe>
-          </div>
+          <div class="iphone-screen"><div class="iphone-notch"></div><iframe id="mobile-preview"></iframe></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Semua script library tetap sama -->
+<!-- JAVASCRIPT TETAP SAMA PERSIS, KARENA MASALAHNYA ADA DI CSS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
-<!-- ... dan script lainnya ... -->
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- ELEMEN ---
-    const elements = {
-      sidebar: {
-        html: document.getElementById('btn-html'), css: document.getElementById('btn-css'),
-        js: document.getElementById('btn-js'), run: document.getElementById('btn-run'),
-      },
-      wrappers: {
-        editor: document.getElementById('editor-wrapper'),
-        preview: document.getElementById('preview-wrapper'),
-      },
-      preview: {
-        backBtn: document.getElementById('back-to-editor-btn'),
-        desktopBtn: document.getElementById('desktop-view-btn'),
-        mobileBtn: document.getElementById('mobile-view-btn'),
-        desktopFrame: document.getElementById('desktop-frame'),
-        mobileFrame: document.getElementById('iphone-frame'),
-        desktopIframe: document.getElementById('desktop-preview'),
-        mobileIframe: document.getElementById('mobile-preview'),
-      }
-    };
-    
-    // --- STATE ---
-    const defaultCode = {
-      html: `<h1>Halo Dunia!</h1>\n<p>Klik tombol ▶ untuk melihat hasil.</p>`,
-      css: `body { padding: 1rem; font-family: sans-serif; }`,
-      js: `console.log("Editor siap!");`
-    };
-    const state = {
-      currentLanguage: 'html',
-      codeData: { ...defaultCode },
-    };
-
-    // --- INISIALISASI EDITOR ---
-    const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
-      mode: 'xml', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true,
-    });
+    const elements = { sidebar: { html: document.getElementById('btn-html'), css: document.getElementById('btn-css'), js: document.getElementById('btn-js'), run: document.getElementById('btn-run'), }, wrappers: { editor: document.getElementById('editor-wrapper'), preview: document.getElementById('preview-wrapper'), }, preview: { backBtn: document.getElementById('back-to-editor-btn'), desktopBtn: document.getElementById('desktop-view-btn'), mobileBtn: document.getElementById('mobile-view-btn'), desktopFrame: document.getElementById('desktop-frame'), mobileFrame: document.getElementById('iphone-frame'), desktopIframe: document.getElementById('desktop-preview'), mobileIframe: document.getElementById('mobile-preview'), } };
+    const defaultCode = { html: `<h1>Halo Dunia!</h1>\n<p>Klik tombol ▶ untuk melihat hasil.</p>`, css: `body {\n padding: 1rem;\n font-family: sans-serif;\n}`, js: `console.log("Editor siap!");` };
+    const state = { currentLanguage: 'html', codeData: { ...defaultCode }, };
+    const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), { mode: 'xml', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true, });
     editor.setValue(state.codeData.html);
     editor.on('change', () => { state.codeData[state.currentLanguage] = editor.getValue(); });
-
-    // --- FUNGSI UTAMA ---
-    const switchView = (view) => {
-      if (view === 'editor') {
-        elements.wrappers.editor.style.display = 'block';
-        elements.wrappers.preview.style.display = 'none';
-        editor.refresh();
-      } else { // 'preview'
-        updatePreviewFrames();
-        elements.wrappers.editor.style.display = 'none';
-        elements.wrappers.preview.style.display = 'flex';
-      }
-    };
-
-    const updatePreviewFrames = () => {
-      const source = `
-        <!DOCTYPE html><html lang="id">
-        <head><meta charset="UTF-8"><style>${state.codeData.css}</style></head>
-        <body>${state.codeData.html}<script>${state.codeData.js}<\/script></body>
-        </html>`;
-      elements.preview.desktopIframe.srcdoc = source;
-      elements.preview.mobileIframe.srcdoc = source;
-    };
-    
-    const switchLanguage = (lang) => {
-      // Selalu kembali ke mode editor saat ganti bahasa
-      switchView('editor');
-
-      state.currentLanguage = lang;
-      Object.values(elements.sidebar).forEach(btn => btn.classList.remove('active'));
-      elements.sidebar[lang].classList.add('active');
-
-      editor.setOption('mode', lang === 'html' ? 'xml' : lang);
-      editor.setValue(state.codeData[lang]);
-      editor.focus();
-    };
-
-    const switchPreviewDevice = (device) => {
-      const isDesktop = device === 'desktop';
-      elements.preview.desktopFrame.style.display = isDesktop ? 'flex' : 'none';
-      elements.preview.mobileFrame.style.display = isDesktop ? 'none' : 'block';
-      elements.preview.desktopBtn.classList.toggle('active', isDesktop);
-      elements.preview.mobileBtn.classList.toggle('active', !isDesktop);
-    };
-
-    // --- EVENT LISTENERS ---
+    const switchView = (view) => { if (view === 'editor') { elements.wrappers.editor.style.display = 'block'; elements.wrappers.preview.style.display = 'none'; editor.refresh(); } else { updatePreviewFrames(); elements.wrappers.editor.style.display = 'none'; elements.wrappers.preview.style.display = 'flex'; } };
+    const updatePreviewFrames = () => { const source = `\n        <!DOCTYPE html><html lang="id">\n        <head><meta charset="UTF-8"><style>${state.codeData.css}</style></head>\n        <body>${state.codeData.html}<script>${state.codeData.js}<\/script></body>\n        </html>`; elements.preview.desktopIframe.srcdoc = source; elements.preview.mobileIframe.srcdoc = source; };
+    const switchLanguage = (lang) => { switchView('editor'); state.currentLanguage = lang; Object.values(elements.sidebar).forEach(btn => btn.classList.remove('active')); elements.sidebar[lang].classList.add('active'); editor.setOption('mode', lang === 'html' ? 'xml' : lang); editor.setValue(state.codeData[lang]); editor.focus(); };
+    const switchPreviewDevice = (device) => { const isDesktop = device === 'desktop'; elements.preview.desktopFrame.style.display = isDesktop ? 'flex' : 'none'; elements.preview.mobileFrame.style.display = isDesktop ? 'none' : 'flex'; elements.preview.desktopBtn.classList.toggle('active', isDesktop); elements.preview.mobileBtn.classList.toggle('active', !isDesktop); };
     elements.sidebar.html.onclick = () => switchLanguage('html');
     elements.sidebar.css.onclick = () => switchLanguage('css');
     elements.sidebar.js.onclick = () => switchLanguage('js');
     elements.sidebar.run.onclick = () => switchView('preview');
-    
     elements.preview.backBtn.onclick = () => switchView('editor');
     elements.preview.desktopBtn.onclick = () => switchPreviewDevice('desktop');
     elements.preview.mobileBtn.onclick = () => switchPreviewDevice('mobile');
-    
-    // Fungsionalitas drag-and-drop untuk iPhone (opsional, bisa ditambahkan jika perlu)
-    // dragElement(elements.preview.mobileFrame); 
-    // function dragElement... (kode sama seperti sebelumnya)
-
-    // --- Inisialisasi Awal ---
-    switchPreviewDevice('desktop'); // Pastikan desktop aktif pertama kali
+    switchPreviewDevice('desktop');
 });
 </script>
 </body>
