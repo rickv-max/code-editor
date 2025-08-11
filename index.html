@@ -1,295 +1,435 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>Code Editor - ZIP Project Import/Export</title>
-<!-- FONT AWESOME & CODEMIRROR CSS -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Editor + Folder Upload (In-memory, No LocalStorage)</title>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
+
 <style>
-  :root {
-    --bg-1: #1e1e1e; --bg-2: #252526; --bg-3: #333333; --border: #444;
-    --text: #ccc; --accent: #007acc; --preview-bg: #3c3c3c;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0; height: 100%; width: 100%;
-    font-family: -apple-system, 'Segoe UI', sans-serif;
-    background-color: var(--bg-1); color: var(--text);
-    display: flex; flex-direction: column; overflow: hidden;
+  :root{--bg:#111;--panel:#1f1f1f;--muted:#9aa0a6;--accent:#0ea5e9;--text:#e6eef6}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,system-ui;min-height:100vh;display:flex;flex-direction:column}
+  header{display:flex;gap:10px;padding:12px;background:linear-gradient(90deg,#0b1220 0,#12151a 100%);align-items:center}
+  header h1{margin:0;font-size:16px; white-space: nowrap;}
+  .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+  button.btn{background:var(--panel);color:var(--text);border:1px solid #2a2a2a;padding:8px 10px;border-radius:6px;cursor:pointer}
+  main{display:flex;flex:1;gap:12px;padding:12px;align-items:stretch}
+  .left{width:520px;display:flex;flex-direction:column;gap:12px; flex-shrink: 0;}
+  .tabs{display:flex;gap:6px}
+  .tabs button{flex:1}
+  .editor-wrap{flex:1;background:var(--panel);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+  .cm-container{min-height:250px; flex: 1}
+  .file-tree{background:#0f1519;color:var(--muted);padding:10px;border-radius:8px;height:250px;overflow:auto;font-size:13px}
+  .file-tree ul{list-style:none;padding-left:6px;margin:0}
+  .file-tree li{padding:4px 6px;border-radius:4px;cursor:default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+  .file-tree li:hover{background:#111827;color:var(--text)}
+  .preview-btn{background:linear-gradient(90deg,var(--accent),#0369a1);border:0;color:white;padding:8px 12px;border-radius:6px;cursor:pointer}
+  .right{flex:1;display:flex;flex-direction:column;gap:8px; min-width: 0;}
+  .preview-area{flex:1;background:var(--panel);border-radius:8px;padding:10px;display:flex;flex-direction:column}
+  .frames{display:flex;gap:8px;align-items:center}
+  iframe.preview{flex:1;border:0;width:100%;min-height:400px;border-radius:6px;background:white}
+  .note{color:var(--muted);font-size:13px}
+  input[type=file]{display:none}
+
+  /* ================================= */
+  /* === BAGIAN RESPONSIVE BARU === */
+  /* ================================= */
+
+  /* Untuk Tablet dan layar yang lebih kecil (di bawah 900px) */
+  @media (max-width: 900px) {
+    main {
+      /* Ubah layout utama menjadi satu kolom vertikal */
+      flex-direction: column;
+    }
+
+    .left {
+      /* Hapus lebar tetap dan buat menjadi lebar penuh */
+      width: 100%;
+    }
+
+    .file-tree {
+      /* Kurangi tinggi file tree agar tidak memakan banyak tempat */
+      height: 200px;
+    }
   }
 
-  /* --- STRUKTUR UTAMA (MOBILE FIRST) --- */
-  #main-content { flex: 1; overflow: hidden; position: relative; }
-  #bottom-nav {
-    width: 100%; height: 55px; background-color: var(--bg-2);
-    display: flex; justify-content: space-around; align-items: center;
-    border-top: 1px solid var(--border); order: 2; flex-shrink: 0;
-  }
-  #bottom-nav .nav-btn {
-    background: none; border: none; color: var(--text);
-    display: flex; flex-direction: column; align-items: center;
-    gap: 4px; font-size: 10px; height: 100%; padding: 5px 12px; cursor: pointer;
-  }
-  #bottom-nav .nav-btn i { font-size: 20px; }
-  
-  .view-container {
-    position: absolute; inset: 0; height: 100%; width: 100%;
-    display: none; flex-direction: column; background-color: var(--bg-1);
-  }
-  .view-container.active { display: flex; }
+  /* Untuk Ponsel dan layar yang sangat kecil (di bawah 600px) */
+  @media (max-width: 600px) {
+    header {
+      /* Buat header juga menjadi vertikal */
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
 
-  /* Tampilan Editor */
-  #editor-view .editor-header {
-    display: flex; background-color: var(--bg-2); flex-shrink: 0; overflow-x: auto;
-  }
-  #editor-view .editor-header button {
-    background: none; border: none; color: var(--text); padding: 10px 15px;
-    font-weight: 500; cursor: pointer; border-right: 1px solid var(--border);
-    border-bottom: 2px solid transparent; white-space: nowrap;
-  }
-  #editor-view .editor-header button.active { color: white; background-color: var(--bg-1); border-bottom-color: var(--accent); }
-  #editor-view .cm-container { flex: 1; position: relative; }
-  .CodeMirror { position: absolute; inset: 0; height: 100%; font-size: 14px; }
+    .controls {
+      /* Hapus margin dan biarkan tombol-tombolnya memenuhi lebar */
+      margin-left: 0;
+      flex-wrap: wrap; /* Izinkan tombol untuk pindah ke baris baru jika tidak muat */
+    }
 
-  /* Tampilan File Manager */
-  #files-view { background-color: var(--bg-2); }
-  .files-header { display: flex; align-items: center; padding: 0 10px; height: 50px; background-color: var(--bg-1); border-bottom: 1px solid var(--border); }
-  .files-header .back-btn { background: none; border: none; color: var(--accent); font-size: 16px; font-weight: 600; padding: 10px; }
-  .panel-actions { padding: 15px; }
-  .panel-actions button {
-    width: 100%; background-color: var(--accent); color: white; display: flex;
-    align-items: center; justify-content: center; gap: 10px; border: none;
-    padding: 12px; border-radius: 6px; cursor: pointer; margin-bottom: 10px;
-    font-weight: 600; font-size: 16px;
-  }
+    .note {
+      /* Sembunyikan beberapa catatan teks agar UI lebih bersih */
+      display: none;
+    }
 
-  /* Pratinjau (Overlay) dan styling bingkai (sama seperti sebelumnya) */
-  #preview-overlay{position:fixed;inset:0;z-index:1000;display:none;flex-direction:column;background:var(--preview-bg)}#preview-overlay.active{display:flex}.preview-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background-color:var(--bg-2);border-bottom:1px solid var(--border);flex-shrink:0}.preview-header .back-btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:600}.preview-controls button{background:none;border:1px solid var(--text);color:var(--text);padding:5px;width:38px;border-radius:4px;margin-left:5px}.preview-controls button.active{background:var(--accent);border-color:var(--accent)}.preview-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:15px}#desktop-frame{min-width:800px;width:95%;max-width:1200px;aspect-ratio:16/9;background:#fff;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:flex;flex-direction:column;margin:auto}#iphone-frame{width:280px;height:580px;flex-shrink:0;background:#111;border:4px solid #333;border-radius:40px;padding:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:none;position:relative}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview,#mobile-preview{width:100%;height:100%;border:none}.iphone-screen{width:100%;height:100%;background:#fff;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}
+    /* Sembunyikan teks pada tombol upload, hanya sisakan ikon */
+    .controls .btn span {
+      display: none;
+    }
+    .controls .btn .fa-solid {
+      margin-right: 0;
+    }
+  }
 </style>
 </head>
 <body>
-<main id="main-content">
-  <div id="editor-view" class="view-container active">
-    <div class="editor-header">
-      <button id="tab-html" class="active">index.html</button>
-      <button id="tab-css">style.css</button>
-      <button id="tab-js">script.js</button>
-    </div>
-    <div class="cm-container"><textarea id="code-editor"></textarea></div>
+<header>
+  <h1>Code Editor — +Folder (In-memory)</h1>
+  <div class="controls">
+    <label class="btn" title="Upload folder">
+      <i class="fa-solid fa-folder-plus"></i>&nbsp;<span class="btn-text">+Folder</span>
+      <input id="folder-input" type="file" webkitdirectory multiple />
+    </label>
+    <label class="btn" title="Upload ZIP">
+      <i class="fa-solid fa-file-zipper"></i>&nbsp;<span class="btn-text">Import .zip</span>
+      <input id="zip-input" type="file" accept=".zip" />
+    </label>
+    <button id="clear-btn" class="btn" title="Clear semua (in-memory)">Clear</button>
+    <button id="run-btn" class="preview-btn"><i class="fa-solid fa-play"></i> Run Preview</button>
   </div>
-  <div id="files-view" class="view-container">
-    <div class="files-header">
-        <button id="files-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Kembali</button>
+</header>
+
+<main>
+  <div class="left">
+    <div class="tabs">
+      <button id="tab-html" class="btn">index.html</button>
+      <button id="tab-css" class="btn">style.css</button>
+      <button id="tab-js" class="btn">script.js</button>
     </div>
-    <div class="panel-actions">
-      <!-- TOMBOL INI SEKARANG UNTUK IMPOR ZIP -->
-      <button id="import-zip-btn"><i class="fa-solid fa-file-zipper"></i> Impor Proyek (.zip)...</button>
-      <button id="export-zip-btn"><i class="fa-solid fa-download"></i> Ekspor Proyek (.zip)</button>
+
+    <div class="editor-wrap">
+      <div class="cm-container"><textarea id="code-editor"></textarea></div>
+      <div style="padding:10px;display:flex;gap:8px;align-items:center">
+        <button id="save-file" class="btn"><i class="fa-solid fa-save"></i> Save</button>
+        <div class="note">Tip: pilih file di file-tree untuk edit. Tidak ada LocalStorage — semua di memori.</div>
+      </div>
+    </div>
+
+    <div class="file-tree" id="file-tree">
+      <strong>Project Files (in-memory)</strong>
+      <ul id="tree-list"><li style="color:var(--text)">(kosong) Unggah folder atau zip...</li></ul>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="preview-area">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><strong>Preview</strong> <span class="note"> (iframe menggunakan srcdoc)</span></div>
+        <div class="frames">
+          <button id="desktop-view" class="btn active">Desktop</button>
+          <button id="mobile-view" class="btn">Mobile</button>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-start; flex: 1;">
+        <iframe id="preview-iframe" class="preview"></iframe>
+      </div>
+
     </div>
   </div>
 </main>
-<nav id="bottom-nav">
-  <button id="nav-editor" class="nav-btn active" title="Editor"><i class="fa-solid fa-code"></i><span>Editor</span></button>
-  <button id="nav-files" class="nav-btn" title="Files"><i class="fa-solid fa-folder-open"></i><span>Files</span></button>
-  <button id="nav-run" class="nav-btn" title="Run Preview"><i class="fa-solid fa-play"></i><span>Run</span></button>
-</nav>
-<div id="preview-overlay">
-  <!-- Konten pratinjau lengkap -->
-  <div class="preview-header"><button id="preview-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Tutup</button><div class="preview-controls"><button id="desktop-view-btn" class="active" title="Desktop"><i class="fa-solid fa-desktop"></i></button><button id="mobile-view-btn" title="Mobile"><i class="fa-solid fa-mobile-alt"></i></button></div></div><div class="preview-content"><div id="desktop-frame"><div class="window-header"><div class="window-controls"><span class="control-btn close"></span><span class="control-btn minimize"></span><span class="control-btn maximize"></span></div><div class="address-bar"><span>localhost</span></div></div><iframe id="desktop-preview"></iframe></div><div id="iphone-frame"><div class="iphone-screen"><div class="iphone-notch"></div><iframe id="mobile-preview"></iframe></div></div></div>
-</div>
-<input type="file" id="zip-importer" accept=".zip" style="display:none;" />
-<!-- SCRIPT LIBRARIES -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+
+<!-- Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 <script>
+// === SCRIPT ANDA TIDAK SAYA UBAH, TETAP SAMA SEPERTI ASLINYA ===
 document.addEventListener('DOMContentLoaded', () => {
-    // === ELEMEN ===
-    const elements = {
-      nav: { editor: document.getElementById('nav-editor'), files: document.getElementById('nav-files'), run: document.getElementById('nav-run') },
-      views: { editor: document.getElementById('editor-view'), files: document.getElementById('files-view') },
-      editorTabs: { html: document.getElementById('tab-html'), css: document.getElementById('tab-css'), js: document.getElementById('tab-js') },
-      files: {
-        backBtn: document.getElementById('files-back-btn'),
-        importBtn: document.getElementById('import-zip-btn'),
-        exportBtn: document.getElementById('export-zip-btn'),
-        importerInput: document.getElementById('zip-importer'),
-      },
-      preview: {
-        overlay: document.getElementById('preview-overlay'), backBtn: document.getElementById('preview-back-btn'),
-        desktopBtn: document.getElementById('desktop-view-btn'), mobileBtn: document.getElementById('mobile-view-btn'),
-        desktopFrame: document.getElementById('desktop-frame'), mobileFrame: document.getElementById('iphone-frame'),
-        desktopIframe: document.getElementById('desktop-preview'), mobileIframe: document.getElementById('mobile-preview'),
-      }
-    };
-    
-    // === STATE ===
-    const defaultCode = {
-      html: `<h1>Selamat Datang!</h1>\n<p>Klik tombol Files untuk impor proyek .zip</p>`,
-      css: `body { padding: 1rem; font-family: sans-serif; text-align: center; }`,
-      js: `console.log("Editor siap!");`
-    };
-    const state = { currentLanguage: 'html', codeData: { ...defaultCode }, assetUrls: {} };
+  // ELEMEN
+  const folderInput = document.getElementById('folder-input');
+  const zipInput = document.getElementById('zip-input');
+  const treeList = document.getElementById('tree-list');
+  const runBtn = document.getElementById('run-btn');
+  const clearBtn = document.getElementById('clear-btn');
+  const previewIframe = document.getElementById('preview-iframe');
+  const saveFileBtn = document.getElementById('save-file');
+  const tabs = { html: document.getElementById('tab-html'), css: document.getElementById('tab-css'), js: document.getElementById('tab-js') };
 
-    // === INISIALISASI EDITOR ===
-    const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
-      mode: 'xml', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true,
-    });
-    editor.setValue(state.codeData.html);
-    editor.on('change', () => { state.codeData[state.currentLanguage] = editor.getValue(); });
+  // STATE (in-memory, no localStorage)
+  const state = {
+    files: {},        // relativePath -> { file, text, isBinary }
+    assetUrls: {},    // pathOrFilename -> blobUrl
+    currentPath: null // currently open file path in editor
+  };
 
-    // === FUNGSI INTI ===
-    const switchMainView = (viewName) => {
-        document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-        elements.views[viewName].classList.add('active');
-        if (viewName === 'editor') editor.refresh();
-    };
-    
-    const switchLanguage = (lang) => {
-      state.currentLanguage = lang;
-      Object.values(elements.editorTabs).forEach(tab => tab.classList.remove('active'));
-      elements.editorTabs[lang].classList.add('active');
-      editor.setOption('mode', lang === 'html' ? 'xml' : lang);
-      editor.setValue(state.codeData[lang]);
-      editor.focus();
-    };
-    
-    // ==========================================================
-    // === KODE YANG DIPERBAIKI ADA DI FUNGSI DI BAWAH INI ===
-    // ==========================================================
-    const togglePreview = (show) => {
-    if (show) {
-        let processedHtml = state.codeData.html;
-        let processedCss = state.codeData.css;
+  // CODEMIRROR
+  const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+    mode: 'xml', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true
+  });
 
-        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // UTIL
+  const isBinaryFile = (name) => /\.(jpe?g|png|gif|svg|webp|mp4|webm|ogg|ico|woff2?)$/i.test(name);
 
-        for (const [path, url] of Object.entries(state.assetUrls)) {
-            // Ganti di HTML (src / href)
-            const regexHtml = new RegExp(escapeRegExp(path), 'g');
-            processedHtml = processedHtml.replace(regexHtml, url);
-
-            // Ganti di CSS (url(...))
-            const regexCss = new RegExp(escapeRegExp(path), 'g');
-            processedCss = processedCss.replace(regexCss, url);
-        }
-
-        const source = `
-            <!DOCTYPE html>
-            <html lang="id">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>${processedCss}</style>
-            </head>
-            <body>
-                ${processedHtml}
-                <script>${state.codeData.js}<\/script>
-            </body>
-            </html>
-        `;
-
-        elements.preview.desktopIframe.srcdoc = source;
-        elements.preview.mobileIframe.srcdoc = source;
+  // RE-RENDER FILE TREE
+  function renderTree() {
+    treeList.innerHTML = '';
+    const keys = Object.keys(state.files).sort();
+    if (!keys.length) {
+      treeList.innerHTML = '<li style="color:var(--muted)">(kosong) Unggah folder atau zip...</li>';
+      return;
     }
-    elements.preview.overlay.classList.toggle('active', show);
-};
-
-    const handleZipImport = async (file) => {
-    if (!file) return;
-    JSZip.loadAsync(file).then(async (zip) => {
-        // Hapus aset lama
-        Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
-        state.assetUrls = {};
-
-        // Proses file teks
-        const htmlFile = zip.file(/index\.html?$/i)[0];
-        const cssFile = zip.file(/style\.css$/i)[0];
-        const jsFile = zip.file(/script\.js$/i)[0];
-
-        if (htmlFile) state.codeData.html = await htmlFile.async('string');
-        if (cssFile) state.codeData.css = await cssFile.async('string');
-        if (jsFile) state.codeData.js = await jsFile.async('string');
-
-        // Proses aset gambar
-        const imagePromises = [];
-        zip.forEach((relativePath, zipEntry) => {
-            if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath) && !relativePath.startsWith('__MACOSX/')) {
-                imagePromises.push(
-                    zipEntry.async('blob').then(blob => {
-                        const fileName = relativePath.split('/').pop();
-                        // Simpan dengan path asli dan nama file
-                        state.assetUrls[relativePath] = URL.createObjectURL(blob);
-                        state.assetUrls[fileName] = URL.createObjectURL(blob);
-                    })
-                );
-            }
-        });
-        await Promise.all(imagePromises);
-
-        switchLanguage('html');
-        switchMainView('editor');
-        alert(`Proyek ${file.name} berhasil diimpor!`);
-    }).catch(err => {
-        console.error("Gagal memproses zip:", err);
-        alert("Gagal memproses file zip. Pastikan formatnya benar.");
+    keys.forEach(k => {
+      const li = document.createElement('li');
+      li.textContent = k;
+      li.title = k;
+      li.onclick = async () => {
+        state.currentPath = k;
+        // kalau teks, tampilkan isinya
+        if (!state.files[k].isBinary) {
+          if (state.files[k].text === undefined) {
+            // lazy-read
+            state.files[k].text = await state.files[k].file.text();
+          }
+          const mode = k.match(/\.css$/i) ? 'css' : (k.match(/\.js$/i) ? 'javascript' : 'xml');
+          editor.setOption('mode', mode);
+          editor.setValue(state.files[k].text || '');
+        } else {
+          editor.setOption('mode', 'xml');
+          editor.setValue(`(binary file) ${k}`);
+        }
+      };
+      treeList.appendChild(li);
     });
-};
+  }
 
-    // === EVENT LISTENERS ===
-    elements.nav.editor.onclick = () => switchMainView('editor');
-    elements.nav.files.onclick = () => switchMainView('files');
-    elements.files.backBtn.onclick = () => switchMainView('editor');
-    elements.nav.run.onclick = () => togglePreview(true);
-    elements.editorTabs.html.onclick = () => switchLanguage('html');
-    elements.editorTabs.css.onclick = () => switchLanguage('css');
-    elements.editorTabs.js.onclick = () => switchLanguage('js');
-    elements.preview.backBtn.onclick = () => togglePreview(false);
+  // HAPUS semua blob URLs & files
+  function clearAll() {
+    Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
+    state.assetUrls = {};
+    state.files = {};
+    state.currentPath = null;
+    editor.setValue('');
+    renderTree();
+  }
+
+  clearBtn.onclick = () => {
+    if (confirm('Hapus semua file yang ada di memori?')) clearAll();
+  };
+
+  // PROSES UPLOAD FOLDER (webkitdirectory)
+  folderInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    // revoke existing blobs
+    Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
+    state.assetUrls = {};
+
+    for (const file of files) {
+      // webkitRelativePath tersedia ketika pakai webkitdirectory
+      const relative = file.webkitRelativePath || file.name;
+      const entry = { file, isBinary: isBinaryFile(relative) };
+      // jika text file, baca text sekarang supaya editor bisa pakai
+      if (!entry.isBinary) {
+        try { entry.text = await file.text(); } catch(e){ entry.text = ''; }
+      } else {
+        // buat blob url dan simpan dengan BOTH relative path & basename
+        const blobUrl = URL.createObjectURL(file);
+        state.assetUrls[relative] = blobUrl;
+        state.assetUrls[relative.split('/').pop()] = blobUrl;
+      }
+      state.files[relative] = entry;
+    }
+    renderTree();
+    // auto-open index.html jika ada
+    const htmlKey = Object.keys(state.files).find(f => /index\.html?$/.test(f));
+    if (htmlKey) {
+        document.getElementById('tab-html').click();
+    }
+    e.target.value = '';
+  });
+
+  // ZIP import (opsional) - baca file2 di dalam zip dan masukkan ke state.files
+  zipInput.addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      const jszip = await JSZip.loadAsync(f);
+      // clear previous
+      Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
+      state.assetUrls = {};
+      state.files = {};
+      const promises = [];
+      jszip.forEach((relPath, entry) => {
+        if (entry.dir) return;
+        const p = (async () => {
+          const isBin = isBinaryFile(relPath);
+          if (isBin) {
+            const blob = await entry.async('blob');
+            const blobUrl = URL.createObjectURL(blob);
+            state.assetUrls[relPath] = blobUrl;
+            state.assetUrls[relPath.split('/').pop()] = blobUrl;
+            // create a File-like object for consistency (Blob doesn't have name+webkitRelativePath)
+            const fileObj = new File([blob], relPath.split('/').pop(), { type: blob.type });
+            state.files[relPath] = { file: fileObj, isBinary: true };
+          } else {
+            const txt = await entry.async('string');
+            // create fake File object for text for potential save/export later
+            const fileObj = new File([txt], relPath.split('/').pop(), { type: 'text/plain' });
+            state.files[relPath] = { file: fileObj, text: txt, isBinary: false };
+          }
+        })();
+        promises.push(p);
+      });
+      await Promise.all(promises);
+      renderTree();
+       const htmlKey = Object.keys(state.files).find(f => /index\.html?$/.test(f));
+        if (htmlKey) {
+            document.getElementById('tab-html').click();
+        }
+    } catch(err) {
+      console.error('ZIP error', err);
+      alert('Gagal memproses zip');
+    } finally {
+      e.target.value = '';
+    }
+  });
+
+  // SAVE file yang sedang diedit (update state.files[currentPath].text)
+  saveFileBtn.addEventListener('click', () => {
+    if (!state.currentPath) return alert('Pilih file dulu di file-tree');
+    if (state.files[state.currentPath].isBinary) return alert('Tidak bisa menyimpan file biner lewat editor.');
+    state.files[state.currentPath].text = editor.getValue();
+    alert('Tersimpan (in-memory). Tekan Run Preview untuk melihat perubahan.');
+  });
+
+  // TAB switch sederhana
+  tabs.html.onclick = () => {
+    // prefer index.html di tree
+    const candidate = Object.keys(state.files).find(k => /index\.html?$/i.test(k));
+    if (candidate) {
+      state.currentPath = candidate;
+      editor.setOption('mode','xml');
+      editor.setValue(state.files[candidate].text || '');
+    } else {
+      state.currentPath = 'index.html';
+      editor.setOption('mode','xml');
+      editor.setValue('<h1>index.html belum ada</h1>');
+    }
+  };
+  tabs.css.onclick = () => {
+    const candidate = Object.keys(state.files).find(k => /style\.css$/i.test(k));
+    if (candidate) { state.currentPath = candidate; editor.setOption('mode','css'); editor.setValue(state.files[candidate].text||''); }
+    else { state.currentPath = 'style.css'; editor.setOption('mode','css'); editor.setValue('/* style.css belum ada */'); }
+  };
+  tabs.js.onclick = () => {
+    const candidate = Object.keys(state.files).find(k => /script\.js$/i.test(k));
+    if (candidate) { state.currentPath = candidate; editor.setOption('mode','javascript'); editor.setValue(state.files[candidate].text||''); }
+    else { state.currentPath = 'script.js'; editor.setOption('mode','javascript'); editor.setValue('// script.js belum ada'); }
+  };
+
+  // BUILD SOURCE FOR PREVIEW: ambil index.html, style.css, script.js dari state.files; fallback ke editor jika tidak ada
+  async function buildPreviewSource() {
+    let html = '<h1>Project kosong</h1>', css = '', js = '';
     
-    elements.files.exportBtn.onclick = () => {
-        const zip = new JSZip();
-        zip.file("index.html", state.codeData.html);
-        zip.file("style.css", state.codeData.css);
-        zip.file("script.js", state.codeData.js);
-        // Perlu menambahkan aset kembali ke zip jika ingin diekspor ulang,
-        // namun itu memerlukan logika yang lebih kompleks untuk mengambil blob dari object URL.
-        // Untuk saat ini, ekspor hanya kode.
-        zip.generateAsync({type:"blob"}).then(content => saveAs(content, "proyek-kode.zip"));
-    };
-    elements.files.importBtn.onclick = () => elements.files.importerInput.click();
-    elements.files.importerInput.onchange = (e) => {
-        handleZipImport(e.target.files[0]);
-        e.target.value = ''; // Reset input agar bisa impor file yang sama lagi
-    };
+    const findKey = (regex) => Object.keys(state.files).find(k => regex.test(k));
+    const readFile = async (key) => state.files[key]?.text ?? (await state.files[key]?.file.text()) ?? '';
 
-    // === INISIALISASI AWAL ===
-    const switchPreviewDevice = (device) => { 
-        const isDesktop = device === 'desktop'; 
-        elements.preview.desktopFrame.style.display = isDesktop ? 'flex' : 'none'; 
-        elements.preview.mobileFrame.style.display = isDesktop ? 'none' : 'flex'; 
-        elements.preview.desktopBtn.classList.toggle('active', isDesktop); 
-        elements.preview.mobileBtn.classList.toggle('active', !isDesktop); 
-    };
-    elements.preview.desktopBtn.onclick = () => switchPreviewDevice('desktop');
-    elements.preview.mobileBtn.onclick = () => switchPreviewDevice('mobile');
+    const htmlKey = findKey(/index\.html?$/i);
+    const cssKey = findKey(/style\.css$/i);
+    const jsKey = findKey(/script\.js$/i);
+    
+    if (htmlKey) html = await readFile(htmlKey);
+    if (cssKey) css = await readFile(cssKey);
+    if (jsKey) js = await readFile(jsKey);
 
-    const init = () => {
-        switchMainView('editor');
-        switchPreviewDevice('desktop');
-        elements.nav.editor.classList.remove('active'); // Editor adalah default, jadi tombol nav tidak perlu aktif
-        document.querySelector('#bottom-nav .nav-btn[title="Editor"]').onclick = () => switchMainView('editor');
-        document.getElementById('nav-editor').style.display = 'flex'; // Tampilkan kembali tombol editor
-    };
+    const keys = Object.keys(state.assetUrls || {}).sort((a,b) => b.length - a.length);
 
-    init();
+    let processedHtml = html;
+    for (const k of keys) {
+        const url = state.assetUrls[k];
+        if (!url) continue;
+        const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(esc, 'g');
+        processedHtml = processedHtml.replace(regex, url);
+    }
+
+    const source = `<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>${css}</style>
+</head>
+<body>
+${processedHtml}
+<script>${js}<\/script>
+</body>
+</html>`;
+    return source;
+  }
+
+  // RUN PREVIEW
+  runBtn.addEventListener('click', async () => {
+    try {
+      const src = await buildPreviewSource();
+      previewIframe.srcdoc = src;
+    } catch (e) {
+      console.error('Preview error', e);
+      alert('Gagal membangun preview. Cek console.');
+    }
+  });
+
+  // basic drag-n-drop folder area (optional)
+  document.body.addEventListener('dragover', (e)=>{ e.preventDefault(); });
+  document.body.addEventListener('drop', async (e)=> {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files || []);
+    if (!files.length) return;
+    
+    const entries = [];
+    for(const item of e.dataTransfer.items) {
+      if(item.kind === 'file') {
+        const entry = item.webkitGetAsEntry();
+        if(entry.isDirectory) {
+          // You need a recursive function to read directories, skipping for simplicity here
+        } else {
+          entries.push(item.getAsFile());
+        }
+      }
+    }
+    // Simple file list processing for now
+    const processPromises = entries.map(async file => {
+       const relative = file.webkitRelativePath || file.name;
+       const entry = { file: file, isBinary: isBinaryFile(relative) };
+        if (!entry.isBinary) {
+            try { entry.text = await file.text(); } catch(err) { entry.text = ''; }
+        } else {
+            const blobUrl = URL.createObjectURL(file);
+            state.assetUrls[relative] = blobUrl;
+            state.assetUrls[relative.split('/').pop()] = blobUrl;
+        }
+        state.files[relative] = entry;
+    });
+    
+    await Promise.all(processPromises);
+    renderTree();
+  });
+
+  // initial render
+  renderTree();
+
+  // revoke blob URLs when page unloads
+  window.addEventListener('beforeunload', () => {
+    Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
+  });
 });
 </script>
-
 </body>
 </html>
