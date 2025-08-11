@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
-
 <style>
   :root {
     --bg-1: #1e1e1e; --bg-2: #252526; --bg-3: #333333; --border: #444;
@@ -66,40 +65,12 @@
     padding: 12px; border-radius: 6px; cursor: pointer; margin-bottom: 10px;
     font-weight: 600; font-size: 16px;
   }
-/* Responsive Design untuk Desktop */
-@media (min-width: 800px) {
-  #desktop-frame {
-    width: 95%;
-    max-width: 1200px;
-    aspect-ratio: 16/9;
-  }
-}
-
-/* Responsive Design untuk iPhone */
-@media (max-width: 767px) {
-  #iphone-frame {
-    width: 100%;
-    height: 80vh;
-    max-height: 600px; /* Aturan ketinggian maksimum */
-    padding: 10px; /* Agar tidak menempel di tepi */
-  }
-
-  .preview-header {
-    padding: 10px; /* Mengatur padding header pratinjau untuk lebih responsif */
-  }
-
-  .iphone-screen {
-    width: 100%;
-    border-radius: 20px; /* Mengurangi radius border untuk perangkat kecil*/
-  }
-}
 
   /* Pratinjau (Overlay) dan styling bingkai (sama seperti sebelumnya) */
   #preview-overlay{position:fixed;inset:0;z-index:1000;display:none;flex-direction:column;background:var(--preview-bg)}#preview-overlay.active{display:flex}.preview-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background-color:var(--bg-2);border-bottom:1px solid var(--border);flex-shrink:0}.preview-header .back-btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-weight:600}.preview-controls button{background:none;border:1px solid var(--text);color:var(--text);padding:5px;width:38px;border-radius:4px;margin-left:5px}.preview-controls button.active{background:var(--accent);border-color:var(--accent)}.preview-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:15px}#desktop-frame{min-width:800px;width:95%;max-width:1200px;aspect-ratio:16/9;background:#fff;border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:flex;flex-direction:column;margin:auto}#iphone-frame{width:280px;height:580px;flex-shrink:0;background:#111;border:4px solid #333;border-radius:40px;padding:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);display:none;position:relative}.window-header{display:flex;align-items:center;padding:8px;background:#e0e0e0;border-bottom:1px solid #ccc;border-top-left-radius:8px;border-top-right-radius:8px;flex-shrink:0}.window-controls{display:flex;gap:6px}.control-btn{width:12px;height:12px;border-radius:50%}.control-btn.close{background:#ff5f57}.control-btn.minimize{background:#ffbd2e}.control-btn.maximize{background:#28c940}.address-bar{flex:1;background:#fff;margin:0 20px;padding:4px 8px;border-radius:4px;color:#555;font-size:12px}#desktop-preview,#mobile-preview{width:100%;height:100%;border:none}.iphone-screen{width:100%;height:100%;background:#fff;border-radius:30px;position:relative;overflow:hidden}.iphone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:25px;background:#111;border-bottom-left-radius:15px;border-bottom-right-radius:15px;z-index:10}
 </style>
 </head>
 <body>
-
 <main id="main-content">
   <div id="editor-view" class="view-container active">
     <div class="editor-header">
@@ -109,7 +80,6 @@
     </div>
     <div class="cm-container"><textarea id="code-editor"></textarea></div>
   </div>
-
   <div id="files-view" class="view-container">
     <div class="files-header">
         <button id="files-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Kembali</button>
@@ -121,20 +91,16 @@
     </div>
   </div>
 </main>
-
 <nav id="bottom-nav">
   <button id="nav-editor" class="nav-btn active" title="Editor"><i class="fa-solid fa-code"></i><span>Editor</span></button>
   <button id="nav-files" class="nav-btn" title="Files"><i class="fa-solid fa-folder-open"></i><span>Files</span></button>
   <button id="nav-run" class="nav-btn" title="Run Preview"><i class="fa-solid fa-play"></i><span>Run</span></button>
 </nav>
-
 <div id="preview-overlay">
   <!-- Konten pratinjau lengkap -->
   <div class="preview-header"><button id="preview-back-btn" class="back-btn"><i class="fa-solid fa-chevron-left"></i> Tutup</button><div class="preview-controls"><button id="desktop-view-btn" class="active" title="Desktop"><i class="fa-solid fa-desktop"></i></button><button id="mobile-view-btn" title="Mobile"><i class="fa-solid fa-mobile-alt"></i></button></div></div><div class="preview-content"><div id="desktop-frame"><div class="window-header"><div class="window-controls"><span class="control-btn close"></span><span class="control-btn minimize"></span><span class="control-btn maximize"></span></div><div class="address-bar"><span>localhost</span></div></div><iframe id="desktop-preview"></iframe></div><div id="iphone-frame"><div class="iphone-screen"><div class="iphone-notch"></div><iframe id="mobile-preview"></iframe></div></div></div>
 </div>
-
 <input type="file" id="zip-importer" accept=".zip" style="display:none;" />
-
 <!-- SCRIPT LIBRARIES -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
@@ -142,7 +108,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // === ELEMEN ===
@@ -195,24 +160,33 @@ document.addEventListener('DOMContentLoaded', () => {
       editor.focus();
     };
     
+    // ==========================================================
+    // === KODE YANG DIPERBAIKI ADA DI FUNGSI DI BAWAH INI ===
+    // ==========================================================
     const togglePreview = (show) => {
         if (show) {
             let processedHtml = state.codeData.html;
-            // Ganti path gambar dengan Object URL
+
+            // Fungsi untuk meloloskan (escape) karakter khusus pada regular expression
+            const escapeRegExp = (string) => {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& berarti seluruh string yang cocok
+            };
+
+            // Ganti path gambar dengan Object URL menggunakan Regex yang sudah diloloskan
             for (const [path, url] of Object.entries(state.assetUrls)) {
-                const regex = new RegExp(path, "g");
+                const escapedPath = escapeRegExp(path);
+                const regex = new RegExp(escapedPath, "g");
                 processedHtml = processedHtml.replace(regex, url);
             }
 
             const source = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${state.codeData.css}</style></head><body>${processedHtml}<script>${state.codeData.js}<\/script></body></html>`;
+            
             elements.preview.desktopIframe.srcdoc = source;
             elements.preview.mobileIframe.srcdoc = source;
         }
         elements.preview.overlay.classList.toggle('active', show);
     };
 
-    const switchPreviewDevice = (device) => { /* ... sama seperti sebelumnya ... */ };
-    
     const handleZipImport = async (file) => {
         if (!file) return;
         JSZip.loadAsync(file).then(async (zip) => {
@@ -232,7 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Proses aset gambar
             const imagePromises = [];
             zip.forEach((relativePath, zipEntry) => {
-                if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath)) {
+                // Hanya proses file gambar dan bukan di dalam folder __MACOSX (metadata macOS)
+                if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath) && !relativePath.startsWith('__MACOSX/')) {
                     imagePromises.push(
                         zipEntry.async('blob').then(blob => {
                             state.assetUrls[relativePath] = URL.createObjectURL(blob);
@@ -250,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Gagal memproses file zip. Pastikan formatnya benar.");
         });
     };
-    
+
     // === EVENT LISTENERS ===
     elements.nav.editor.onclick = () => switchMainView('editor');
     elements.nav.files.onclick = () => switchMainView('files');
@@ -260,34 +235,45 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.editorTabs.css.onclick = () => switchLanguage('css');
     elements.editorTabs.js.onclick = () => switchLanguage('js');
     elements.preview.backBtn.onclick = () => togglePreview(false);
-    elements.preview.desktopBtn.onclick = () => { /* ... sama ... */ };
-    elements.preview.mobileBtn.onclick = () => { /* ... sama ... */ };
     
     elements.files.exportBtn.onclick = () => {
         const zip = new JSZip();
         zip.file("index.html", state.codeData.html);
         zip.file("style.css", state.codeData.css);
         zip.file("script.js", state.codeData.js);
+        // Perlu menambahkan aset kembali ke zip jika ingin diekspor ulang,
+        // namun itu memerlukan logika yang lebih kompleks untuk mengambil blob dari object URL.
+        // Untuk saat ini, ekspor hanya kode.
         zip.generateAsync({type:"blob"}).then(content => saveAs(content, "proyek-kode.zip"));
     };
     elements.files.importBtn.onclick = () => elements.files.importerInput.click();
-    elements.files.importerInput.onchange = (e) => handleZipImport(e.target.files[0]);
-    
-    // === INISIALISASI AWAL ===
-    const init = () => {
-        // Logika ini disederhanakan karena layout mobile adalah default
-        switchMainView('editor');
-        switchPreviewDevice('desktop');
-        document.getElementById('nav-editor').style.display = 'none'; // Tombol editor tidak perlu di nav
+    elements.files.importerInput.onchange = (e) => {
+        handleZipImport(e.target.files[0]);
+        e.target.value = ''; // Reset input agar bisa impor file yang sama lagi
     };
 
-    // Fungsi placeholder yang sama
-    const switchPreviewDevicePlaceholder = (device) => { const isDesktop = device === 'desktop'; elements.preview.desktopFrame.style.display = isDesktop ? 'flex' : 'none'; elements.preview.mobileFrame.style.display = isDesktop ? 'none' : 'flex'; elements.preview.desktopBtn.classList.toggle('active', isDesktop); elements.preview.mobileBtn.classList.toggle('active', !isDesktop); };
-    elements.preview.desktopBtn.onclick = () => switchPreviewDevicePlaceholder('desktop');
-    elements.preview.mobileBtn.onclick = () => switchPreviewDevicePlaceholder('mobile');
+    // === INISIALISASI AWAL ===
+    const switchPreviewDevice = (device) => { 
+        const isDesktop = device === 'desktop'; 
+        elements.preview.desktopFrame.style.display = isDesktop ? 'flex' : 'none'; 
+        elements.preview.mobileFrame.style.display = isDesktop ? 'none' : 'flex'; 
+        elements.preview.desktopBtn.classList.toggle('active', isDesktop); 
+        elements.preview.mobileBtn.classList.toggle('active', !isDesktop); 
+    };
+    elements.preview.desktopBtn.onclick = () => switchPreviewDevice('desktop');
+    elements.preview.mobileBtn.onclick = () => switchPreviewDevice('mobile');
+
+    const init = () => {
+        switchMainView('editor');
+        switchPreviewDevice('desktop');
+        elements.nav.editor.classList.remove('active'); // Editor adalah default, jadi tombol nav tidak perlu aktif
+        document.querySelector('#bottom-nav .nav-btn[title="Editor"]').onclick = () => switchMainView('editor');
+        document.getElementById('nav-editor').style.display = 'flex'; // Tampilkan kembali tombol editor
+    };
 
     init();
 });
 </script>
+
 </body>
 </html>
