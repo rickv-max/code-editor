@@ -125,39 +125,47 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const togglePreview = (show) => {
         if (show) {
-            console.log("Mempersiapkan pratinjau...");
+            console.log("--- MEMPERSIAPKAN PRATINJAU ---");
             let processedHtml = state.codeData.html;
             
             console.log("Aset yang akan diganti:", state.assetUrls);
 
             for (const [path, url] of Object.entries(state.assetUrls)) {
-                const escapedPath = escapeRegExp(path);
-                const regex = new RegExp(escapedPath, "g");
-                if (processedHtml.includes(path)) {
-                    console.log(`Mengganti path: "${path}" dengan URL blob.`);
-                    processedHtml = processedHtml.replace(regex, url);
-                } else {
-                    console.warn(`Peringatan: Path "${path}" tidak ditemukan di index.html.`);
-                }
+                // Mencari variasi path: "images/pic.png" dan "./images/pic.png"
+                const variations = [path, `./${path}`];
+                variations.forEach(variation => {
+                    const escapedVariation = escapeRegExp(variation);
+                    const regex = new RegExp(escapedVariation, "g");
+
+                    if (processedHtml.match(regex)) {
+                       console.log(`✅ Ditemukan & Diganti: Path "${variation}" di HTML.`);
+                       processedHtml = processedHtml.replace(regex, url);
+                    }
+                });
+            }
+
+            // Pengecekan akhir
+            if (JSON.stringify(state.assetUrls).length > 2 && !processedHtml.includes('blob:')) {
+                console.warn("🚨 PERINGATAN: Aset gambar ada, tapi tidak ada path yang berhasil diganti di HTML. Periksa path di tag <img> Anda!");
             }
 
             const source = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${state.codeData.css}</style></head><body>${processedHtml}<script>${state.codeData.js}<\/script></body></html>`;
             elements.preview.desktopIframe.srcdoc = source;
             elements.preview.mobileIframe.srcdoc = source;
-            console.log("Pratinjau berhasil dibuat.");
+            console.log("--- PRATINJAU SELESAI DIBUAT ---");
         }
         elements.preview.overlay.classList.toggle('active', show);
     };
 
     const handleZipImport = async (file) => {
         if (!file) return;
-        console.log("Memulai impor file:", file.name);
+        console.log("--- MEMULAI PROSES IMPOR ---");
+        console.log("File:", file.name);
         JSZip.loadAsync(file).then(async (zip) => {
             Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
             state.assetUrls = {};
-            state.codeData = { ...defaultCode };
+            state.codeData = { html: '', css: '', js: '' };
 
-            // --- LOGIKA BARU UNTUK DETEKSI FOLDER INDUK ---
             let basePath = "";
             const fileEntries = Object.keys(zip.files).filter(name => !zip.files[name].dir && !name.startsWith("__MACOSX/"));
             
@@ -168,27 +176,38 @@ document.addEventListener('DOMContentLoaded', () => {
                     const potentialBasePath = firstPath.substring(0, separatorIndex + 1);
                     if (fileEntries.every(path => path.startsWith(potentialBasePath))) {
                         basePath = potentialBasePath;
-                        console.log("Folder induk terdeteksi dan akan dihapus dari path:", basePath);
+                        console.log(`Folder induk terdeteksi: "${basePath}". Path ini akan diabaikan.`);
                     }
                 }
             }
-            // --- AKHIR LOGIKA BARU ---
 
-            const findFile = (regex) => zip.file(new RegExp(`^${escapeRegExp(basePath)}${regex}`, 'i'))[0];
+            const findFile = (regex) => {
+                const found = Object.keys(zip.files).find(name => name.match(new RegExp(`^${escapeRegExp(basePath)}${regex}`, 'i')));
+                return found ? zip.files[found] : null;
+            }
             
             const htmlFile = findFile('index\\.html?$');
             const cssFile = findFile('style\\.css$');
             const jsFile = findFile('script\\.js$');
             
-            if (htmlFile) state.codeData.html = await htmlFile.async('string');
-            if (cssFile) state.codeData.css = await cssFile.async('string');
-            if (jsFile) state.codeData.js = await jsFile.async('string');
+            if (htmlFile) {
+                console.log(`File ditemukan: ${htmlFile.name}`);
+                state.codeData.html = await htmlFile.async('string');
+            }
+            if (cssFile) {
+                console.log(`File ditemukan: ${cssFile.name}`);
+                state.codeData.css = await cssFile.async('string');
+            }
+            if (jsFile) {
+                console.log(`File ditemukan: ${jsFile.name}`);
+                state.codeData.js = await jsFile.async('string');
+            }
 
             const imagePromises = [];
             zip.forEach((relativePath, zipEntry) => {
                 if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath) && !zipEntry.dir && !relativePath.startsWith("__MACOSX/")) {
                     const assetKey = relativePath.replace(basePath, '');
-                     console.log(`Memproses gambar: "${relativePath}" -> kunci aset: "${assetKey}"`);
+                    console.log(`Memproses Aset Gambar: "${relativePath}" -> Disimpan sebagai kunci: "${assetKey}"`);
                     imagePromises.push(
                         zipEntry.async('blob').then(blob => {
                             state.assetUrls[assetKey] = URL.createObjectURL(blob);
@@ -198,10 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             await Promise.all(imagePromises);
 
-            console.log("Proses impor selesai. Aset yang dimuat:", state.assetUrls);
+            console.log("--- PROSES IMPOR SELESAI ---");
             switchLanguage('html');
             switchMainView('editor');
-            alert(`Proyek ${file.name} berhasil diimpor!`);
+            alert(`Proyek ${file.name} berhasil diimpor! Periksa pratinjau.`);
         }).catch(err => {
             console.error("Gagal memproses zip:", err);
             alert("Gagal memproses file zip. Pastikan formatnya benar dan lihat console untuk detail.");
