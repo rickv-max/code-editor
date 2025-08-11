@@ -173,11 +173,11 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             // Ganti path gambar dengan Object URL menggunakan Regex yang sudah diloloskan
-            for (const [path, url] of Object.entries(state.assetUrls)) {
-                const escapedPath = escapeRegExp(path);
-                const regex = new RegExp(escapedPath, "g");
-                processedHtml = processedHtml.replace(regex, url);
-            }
+            for (const [fileName, url] of Object.entries(state.assetUrls)) {
+    const escapedName = escapeRegExp(fileName);
+    const regex = new RegExp(escapedName, "g");
+    processedHtml = processedHtml.replace(regex, url);
+}
 
             const source = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${state.codeData.css}</style></head><body>${processedHtml}<script>${state.codeData.js}<\/script></body></html>`;
             
@@ -204,17 +204,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (jsFile) state.codeData.js = await jsFile.async('string');
 
             // Proses aset gambar
-            const imagePromises = [];
-            zip.forEach((relativePath, zipEntry) => {
-                // Hanya proses file gambar dan bukan di dalam folder __MACOSX (metadata macOS)
-                if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath) && !relativePath.startsWith('__MACOSX/')) {
-                    imagePromises.push(
-                        zipEntry.async('blob').then(blob => {
-                            state.assetUrls[relativePath] = URL.createObjectURL(blob);
-                        })
-                    );
-                }
-            });
+const imagePromises = [];
+zip.forEach((relativePath, zipEntry) => {
+    if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath) && !relativePath.startsWith('__MACOSX/')) {
+        imagePromises.push(
+            zipEntry.async('blob').then(blob => {
+                // Ambil hanya nama file, tanpa folder
+                const fileName = relativePath.split('/').pop();
+                state.assetUrls[fileName] = URL.createObjectURL(blob);
+            })
+        );
+    }
+});
             await Promise.all(imagePromises);
 
             switchLanguage('html');
