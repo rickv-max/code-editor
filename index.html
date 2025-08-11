@@ -3,148 +3,165 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Editor + Folder Upload (In-memory, No LocalStorage)</title>
+<title>VS Code Clone - Web Editor</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
 
 <style>
-  :root{--bg:#111;--panel:#1f1f1f;--muted:#9aa0a6;--accent:#0ea5e9;--text:#e6eef6}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,system-ui;min-height:100vh;display:flex;flex-direction:column}
-  header{display:flex;gap:10px;padding:12px;background:linear-gradient(90deg,#0b1220 0,#12151a 100%);align-items:center}
-  header h1{margin:0;font-size:16px; white-space: nowrap;}
-  .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
-  button.btn{background:var(--panel);color:var(--text);border:1px solid #2a2a2a;padding:8px 10px;border-radius:6px;cursor:pointer}
-  main{display:flex;flex:1;gap:12px;padding:12px;align-items:stretch}
-  .left{width:520px;display:flex;flex-direction:column;gap:12px; flex-shrink: 0;}
-  .tabs{display:flex;gap:6px}
-  .tabs button{flex:1}
-  .editor-wrap{flex:1;background:var(--panel);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
-  .cm-container{min-height:250px; flex: 1}
-  .file-tree{background:#0f1519;color:var(--muted);padding:10px;border-radius:8px;height:250px;overflow:auto;font-size:13px}
-  .file-tree ul{list-style:none;padding-left:6px;margin:0}
-  .file-tree li{padding:4px 6px;border-radius:4px;cursor:default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-  .file-tree li:hover{background:#111827;color:var(--text)}
-  .preview-btn{background:linear-gradient(90deg,var(--accent),#0369a1);border:0;color:white;padding:8px 12px;border-radius:6px;cursor:pointer}
-  .right{flex:1;display:flex;flex-direction:column;gap:8px; min-width: 0;}
-  .preview-area{flex:1;background:var(--panel);border-radius:8px;padding:10px;display:flex;flex-direction:column}
-  .frames{display:flex;gap:8px;align-items:center}
-  iframe.preview{flex:1;border:0;width:100%;min-height:400px;border-radius:6px;background:white}
-  .note{color:var(--muted);font-size:13px}
-  input[type=file]{display:none}
-
-  /* ================================= */
-  /* === BAGIAN RESPONSIVE BARU === */
-  /* ================================= */
-
-  /* Untuk Tablet dan layar yang lebih kecil (di bawah 900px) */
-  @media (max-width: 900px) {
-    main {
-      /* Ubah layout utama menjadi satu kolom vertikal */
-      flex-direction: column;
-    }
-
-    .left {
-      /* Hapus lebar tetap dan buat menjadi lebar penuh */
-      width: 100%;
-    }
-
-    .file-tree {
-      /* Kurangi tinggi file tree agar tidak memakan banyak tempat */
-      height: 200px;
-    }
+  :root {
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --activity-bar-bg: #333333;
+    --sidebar-bg: #252526;
+    --editor-bg: #1e1e1e;
+    --status-bar-bg: #007acc;
+    --border-color: #3e3e42;
+    --text-primary: #cccccc;
+    --text-secondary: #808080;
+    --list-hover-bg: #2a2d2e;
+    --list-active-bg: #37373d;
+    --accent-blue: #007acc;
+    --tab-inactive-bg: #2d2d2d;
+    --tab-active-bg: var(--editor-bg);
   }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font-family);
+    background: var(--editor-bg);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .main-container { display: flex; flex: 1; min-height: 0; }
+  .icon-btn { color: var(--text-secondary); background: none; border: none; font-size: 22px; padding: 10px; width: 100%; cursor: pointer; position: relative; }
+  .icon-btn:hover { color: var(--text-primary); }
 
-  /* Untuk Ponsel dan layar yang sangat kecil (di bawah 600px) */
-  @media (max-width: 600px) {
-    header {
-      /* Buat header juga menjadi vertikal */
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
-    }
+  /* --- ACTIVITY BAR (Kiri) --- */
+  .activity-bar {
+    width: 48px;
+    background: var(--activity-bar-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    flex-shrink: 0;
+    z-index: 101;
+  }
+  .activity-bar .actions-group { display: flex; flex-direction: column; gap: 10px; width: 100%;}
+  .activity-bar .icon-btn.active { color: var(--text-primary); }
+  .activity-bar .icon-btn.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 70%; background: var(--text-primary); }
 
-    .controls {
-      /* Hapus margin dan biarkan tombol-tombolnya memenuhi lebar */
-      margin-left: 0;
-      flex-wrap: wrap; /* Izinkan tombol untuk pindah ke baris baru jika tidak muat */
-    }
+  /* --- SIDEBAR (Explorer) --- */
+  .sidebar {
+    width: 250px;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.2s ease, margin-left 0.2s ease;
+    flex-shrink: 0;
+  }
+  .sidebar.collapsed { width: 0; padding: 0; border-right: none;}
+  .sidebar-header { padding: 10px 15px; font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px; white-space: nowrap; }
+  .file-tree { flex: 1; overflow: auto; font-size: 14px; padding: 0 5px; min-height: 0; }
+  .file-tree ul { list-style: none; margin: 0; padding: 0; }
+  .file-tree ul.nested { padding-left: 15px; }
+  .file-tree ul.collapsed { display: none; }
+  .file-tree li { border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+  .tree-item { padding: 4px 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .tree-item:hover { background: var(--list-hover-bg); }
+  .tree-item.active { background: var(--list-active-bg); }
+  .tree-item .folder-toggle { width: 12px; text-align: center; transition: transform 0.1s ease; }
+  .tree-item .folder-toggle.expanded { transform: rotate(90deg); }
 
-    .note {
-      /* Sembunyikan beberapa catatan teks agar UI lebih bersih */
-      display: none;
-    }
+  /* --- WORKBENCH (Editor + Panel) --- */
+  .workbench { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .editor-area { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .editor-tabs { display: flex; background: var(--tab-inactive-bg); flex-shrink: 0; overflow-x: auto; }
+  .editor-tabs .btn { background: var(--tab-inactive-bg); border: none; border-right: 1px solid var(--border-color); border-radius: 0; padding: 8px 15px; white-space: nowrap; }
+  .editor-tabs .btn.active { background: var(--tab-active-bg); }
+  .editor-wrap { flex: 1; background: var(--editor-bg); display: flex; min-height: 0; position: relative; }
+  .cm-container { flex: 1; position: relative; }
+  .CodeMirror { position: absolute; inset: 0; height: 100%; width: 100%; }
+  
+  /* --- STATUS BAR --- */
+  .status-bar { height: 22px; background: var(--status-bar-bg); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; font-size: 12px; flex-shrink: 0; }
+  .status-bar .status-item { display: flex; align-items: center; gap: 5px; }
+  
+  /* --- Area Pratinjau Gambar --- */
+  .image-preview-area { display: none; position: absolute; inset: 0; background-color: var(--editor-bg); padding: 20px; align-items: center; justify-content: center; }
+  .image-preview-area.active { display: flex; }
+  .image-preview-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-    /* Sembunyikan teks pada tombol upload, hanya sisakan ikon */
-    .controls .btn span {
-      display: none;
-    }
-    .controls .btn .fa-solid {
-      margin-right: 0;
-    }
+  /* --- MODAL PREVIEW (untuk Run) --- */
+  #preview-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; padding: 4vh 4vw; align-items: center; justify-content: center; }
+  #preview-overlay.active { display: flex; }
+  .preview-modal { width: 100%; height: 100%; background: var(--sidebar-bg); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; }
+  .preview-header { padding: 8px 15px; display: flex; align-items: center; border-bottom: 1px solid var(--border-color); font-weight: 600; }
+  .preview-header .close-btn { margin-left: auto; background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; line-height: 1;}
+  .preview-content { flex: 1; }
+  iframe.preview { width: 100%; height: 100%; border: none; background: white; }
+  
+  /* --- RESPONSIVE --- */
+  @media (max-width: 768px) {
+    .sidebar { position: fixed; height: 100vh; z-index: 100; left: 48px; margin-left: -100%; }
+    .sidebar.visible { margin-left: 0; width: calc(100% - 48px); max-width: 300px; }
+    .status-bar { display: none; }
   }
 </style>
 </head>
 <body>
-<header>
-  <h1>Code Editor — +Folder (In-memory)</h1>
-  <div class="controls">
-    <label class="btn" title="Upload folder">
-      <i class="fa-solid fa-folder-plus"></i>&nbsp;<span class="btn-text">+Folder</span>
-      <input id="folder-input" type="file" webkitdirectory multiple />
-    </label>
-    <label class="btn" title="Upload ZIP">
-      <i class="fa-solid fa-file-zipper"></i>&nbsp;<span class="btn-text">Import .zip</span>
-      <input id="zip-input" type="file" accept=".zip" />
-    </label>
-    <button id="clear-btn" class="btn" title="Clear semua (in-memory)">Clear</button>
-    <button id="run-btn" class="preview-btn"><i class="fa-solid fa-play"></i> Run Preview</button>
-  </div>
-</header>
 
-<main>
-  <div class="left">
-    <div class="tabs">
-      <button id="tab-html" class="btn">index.html</button>
-      <button id="tab-css" class="btn">style.css</button>
-      <button id="tab-js" class="btn">script.js</button>
+<div class="main-container">
+  <aside class="activity-bar">
+    <div class="actions-group">
+      <button id="activity-files" class="icon-btn active" title="Explorer"><i class="fa-solid fa-files"></i></button>
+      <label for="folder-input" class="icon-btn" title="Import Folder"><i class="fa-solid fa-folder-plus"></i></label>
+      <label for="zip-input" class="icon-btn" title="Import ZIP"><i class="fa-solid fa-file-zipper"></i></label>
+      <button id="run-btn-activity" class="icon-btn" title="Run Preview"><i class="fa-solid fa-play"></i></button>
     </div>
+    <div class="actions-group">
+        <button id="clear-btn" class="icon-btn" title="Clear All"><i class="fa-solid fa-trash"></i></button>
+    </div>
+  </aside>
 
-    <div class="editor-wrap">
-      <div class="cm-container"><textarea id="code-editor"></textarea></div>
-      <div style="padding:10px;display:flex;gap:8px;align-items:center">
-        <button id="save-file" class="btn"><i class="fa-solid fa-save"></i> Save</button>
-        <div class="note">Tip: pilih file di file-tree untuk edit. Tidak ada LocalStorage — semua di memori.</div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">Explorer</div>
+    <div class="file-tree" id="file-tree"></div>
+  </aside>
+
+  <div class="workbench">
+    <main class="editor-area">
+      <div class="editor-tabs" id="editor-tabs"></div>
+      <div class="editor-wrap">
+        <div class="cm-container" id="cm-container"><textarea id="code-editor"></textarea></div>
+        <div class="image-preview-area" id="image-preview-area"><img id="image-preview-img" src="" alt="Image Preview"/></div>
       </div>
-    </div>
-
-    <div class="file-tree" id="file-tree">
-      <strong>Project Files (in-memory)</strong>
-      <ul id="tree-list"><li style="color:var(--text)">(kosong) Unggah folder atau zip...</li></ul>
-    </div>
+    </main>
   </div>
+</div>
 
-  <div class="right">
-    <div class="preview-area">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><strong>Preview</strong> <span class="note"> (iframe menggunakan srcdoc)</span></div>
-        <div class="frames">
-          <button id="desktop-view" class="btn active">Desktop</button>
-          <button id="mobile-view" class="btn">Mobile</button>
-        </div>
-      </div>
+<footer class="status-bar">
+  <div class="status-item"><i class="fa-solid fa-code-branch"></i> main</div>
+  <div class="status-item"><button id="save-file" style="background:none;border:none;color:white;cursor:pointer;"><i class="fa-solid fa-save"></i> Save File</button></div>
+  <div class="status-item">UTF-8</div>
+</footer>
 
-      <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-start; flex: 1;">
-        <iframe id="preview-iframe" class="preview"></iframe>
-      </div>
-
-    </div>
+<div id="preview-overlay">
+  <div class="preview-modal">
+    <div class="preview-header"><span>Preview</span><button id="preview-close-btn" class="close-btn">&times;</button></div>
+    <div class="preview-content"><iframe id="preview-iframe" class="preview"></iframe></div>
   </div>
-</main>
+</div>
 
-<!-- Libraries -->
+<input id="folder-input" type="file" webkitdirectory multiple hidden />
+<input id="zip-input" type="file" accept=".zip" hidden />
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
@@ -152,283 +169,219 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
-// === SCRIPT ANDA TIDAK SAYA UBAH, TETAP SAMA SEPERTI ASLINYA ===
 document.addEventListener('DOMContentLoaded', () => {
-  // ELEMEN
-  const folderInput = document.getElementById('folder-input');
-  const zipInput = document.getElementById('zip-input');
-  const treeList = document.getElementById('tree-list');
-  const runBtn = document.getElementById('run-btn');
-  const clearBtn = document.getElementById('clear-btn');
-  const previewIframe = document.getElementById('preview-iframe');
-  const saveFileBtn = document.getElementById('save-file');
-  const tabs = { html: document.getElementById('tab-html'), css: document.getElementById('tab-css'), js: document.getElementById('tab-js') };
-
-  // STATE (in-memory, no localStorage)
-  const state = {
-    files: {},        // relativePath -> { file, text, isBinary }
-    assetUrls: {},    // pathOrFilename -> blobUrl
-    currentPath: null // currently open file path in editor
-  };
-
-  // CODEMIRROR
-  const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
-    mode: 'xml', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true
-  });
-
-  // UTIL
-  const isBinaryFile = (name) => /\.(jpe?g|png|gif|svg|webp|mp4|webm|ogg|ico|woff2?)$/i.test(name);
-
-  // RE-RENDER FILE TREE
-  function renderTree() {
-    treeList.innerHTML = '';
-    const keys = Object.keys(state.files).sort();
-    if (!keys.length) {
-      treeList.innerHTML = '<li style="color:var(--muted)">(kosong) Unggah folder atau zip...</li>';
-      return;
-    }
-    keys.forEach(k => {
-      const li = document.createElement('li');
-      li.textContent = k;
-      li.title = k;
-      li.onclick = async () => {
-        state.currentPath = k;
-        // kalau teks, tampilkan isinya
-        if (!state.files[k].isBinary) {
-          if (state.files[k].text === undefined) {
-            // lazy-read
-            state.files[k].text = await state.files[k].file.text();
-          }
-          const mode = k.match(/\.css$/i) ? 'css' : (k.match(/\.js$/i) ? 'javascript' : 'xml');
-          editor.setOption('mode', mode);
-          editor.setValue(state.files[k].text || '');
-        } else {
-          editor.setOption('mode', 'xml');
-          editor.setValue(`(binary file) ${k}`);
-        }
-      };
-      treeList.appendChild(li);
-    });
-  }
-
-  // HAPUS semua blob URLs & files
-  function clearAll() {
-    Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
-    state.assetUrls = {};
-    state.files = {};
-    state.currentPath = null;
-    editor.setValue('');
-    renderTree();
-  }
-
-  clearBtn.onclick = () => {
-    if (confirm('Hapus semua file yang ada di memori?')) clearAll();
-  };
-
-  // PROSES UPLOAD FOLDER (webkitdirectory)
-  folderInput.addEventListener('change', async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    // revoke existing blobs
-    Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
-    state.assetUrls = {};
-
-    for (const file of files) {
-      // webkitRelativePath tersedia ketika pakai webkitdirectory
-      const relative = file.webkitRelativePath || file.name;
-      const entry = { file, isBinary: isBinaryFile(relative) };
-      // jika text file, baca text sekarang supaya editor bisa pakai
-      if (!entry.isBinary) {
-        try { entry.text = await file.text(); } catch(e){ entry.text = ''; }
-      } else {
-        // buat blob url dan simpan dengan BOTH relative path & basename
-        const blobUrl = URL.createObjectURL(file);
-        state.assetUrls[relative] = blobUrl;
-        state.assetUrls[relative.split('/').pop()] = blobUrl;
-      }
-      state.files[relative] = entry;
-    }
-    renderTree();
-    // auto-open index.html jika ada
-    const htmlKey = Object.keys(state.files).find(f => /index\.html?$/.test(f));
-    if (htmlKey) {
-        document.getElementById('tab-html').click();
-    }
-    e.target.value = '';
-  });
-
-  // ZIP import (opsional) - baca file2 di dalam zip dan masukkan ke state.files
-  zipInput.addEventListener('change', async (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    try {
-      const jszip = await JSZip.loadAsync(f);
-      // clear previous
-      Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
-      state.assetUrls = {};
-      state.files = {};
-      const promises = [];
-      jszip.forEach((relPath, entry) => {
-        if (entry.dir) return;
-        const p = (async () => {
-          const isBin = isBinaryFile(relPath);
-          if (isBin) {
-            const blob = await entry.async('blob');
-            const blobUrl = URL.createObjectURL(blob);
-            state.assetUrls[relPath] = blobUrl;
-            state.assetUrls[relPath.split('/').pop()] = blobUrl;
-            // create a File-like object for consistency (Blob doesn't have name+webkitRelativePath)
-            const fileObj = new File([blob], relPath.split('/').pop(), { type: blob.type });
-            state.files[relPath] = { file: fileObj, isBinary: true };
-          } else {
-            const txt = await entry.async('string');
-            // create fake File object for text for potential save/export later
-            const fileObj = new File([txt], relPath.split('/').pop(), { type: 'text/plain' });
-            state.files[relPath] = { file: fileObj, text: txt, isBinary: false };
-          }
-        })();
-        promises.push(p);
-      });
-      await Promise.all(promises);
-      renderTree();
-       const htmlKey = Object.keys(state.files).find(f => /index\.html?$/.test(f));
-        if (htmlKey) {
-            document.getElementById('tab-html').click();
-        }
-    } catch(err) {
-      console.error('ZIP error', err);
-      alert('Gagal memproses zip');
-    } finally {
-      e.target.value = '';
-    }
-  });
-
-  // SAVE file yang sedang diedit (update state.files[currentPath].text)
-  saveFileBtn.addEventListener('click', () => {
-    if (!state.currentPath) return alert('Pilih file dulu di file-tree');
-    if (state.files[state.currentPath].isBinary) return alert('Tidak bisa menyimpan file biner lewat editor.');
-    state.files[state.currentPath].text = editor.getValue();
-    alert('Tersimpan (in-memory). Tekan Run Preview untuk melihat perubahan.');
-  });
-
-  // TAB switch sederhana
-  tabs.html.onclick = () => {
-    // prefer index.html di tree
-    const candidate = Object.keys(state.files).find(k => /index\.html?$/i.test(k));
-    if (candidate) {
-      state.currentPath = candidate;
-      editor.setOption('mode','xml');
-      editor.setValue(state.files[candidate].text || '');
-    } else {
-      state.currentPath = 'index.html';
-      editor.setOption('mode','xml');
-      editor.setValue('<h1>index.html belum ada</h1>');
-    }
-  };
-  tabs.css.onclick = () => {
-    const candidate = Object.keys(state.files).find(k => /style\.css$/i.test(k));
-    if (candidate) { state.currentPath = candidate; editor.setOption('mode','css'); editor.setValue(state.files[candidate].text||''); }
-    else { state.currentPath = 'style.css'; editor.setOption('mode','css'); editor.setValue('/* style.css belum ada */'); }
-  };
-  tabs.js.onclick = () => {
-    const candidate = Object.keys(state.files).find(k => /script\.js$/i.test(k));
-    if (candidate) { state.currentPath = candidate; editor.setOption('mode','javascript'); editor.setValue(state.files[candidate].text||''); }
-    else { state.currentPath = 'script.js'; editor.setOption('mode','javascript'); editor.setValue('// script.js belum ada'); }
-  };
-
-  // BUILD SOURCE FOR PREVIEW: ambil index.html, style.css, script.js dari state.files; fallback ke editor jika tidak ada
-  async function buildPreviewSource() {
-    let html = '<h1>Project kosong</h1>', css = '', js = '';
+    const ui = {
+        sidebar: document.getElementById('sidebar'),
+        activityFilesBtn: document.getElementById('activity-files'),
+        previewOverlay: document.getElementById('preview-overlay'),
+        previewCloseBtn: document.getElementById('preview-close-btn'),
+        editorTabsContainer: document.getElementById('editor-tabs'),
+        cmContainer: document.getElementById('cm-container'),
+        imagePreviewArea: document.getElementById('image-preview-area'),
+        imagePreviewImg: document.getElementById('image-preview-img'),
+        folderInput: document.getElementById('folder-input'),
+        zipInput: document.getElementById('zip-input'),
+        treeContainer: document.getElementById('file-tree'),
+        runBtn: document.getElementById('run-btn-activity'),
+        clearBtn: document.getElementById('clear-btn'),
+        previewIframe: document.getElementById('preview-iframe'),
+        saveFileBtn: document.getElementById('save-file'),
+    };
     
-    const findKey = (regex) => Object.keys(state.files).find(k => regex.test(k));
-    const readFile = async (key) => state.files[key]?.text ?? (await state.files[key]?.file.text()) ?? '';
-
-    const htmlKey = findKey(/index\.html?$/i);
-    const cssKey = findKey(/style\.css$/i);
-    const jsKey = findKey(/script\.js$/i);
-    
-    if (htmlKey) html = await readFile(htmlKey);
-    if (cssKey) css = await readFile(cssKey);
-    if (jsKey) js = await readFile(jsKey);
-
-    const keys = Object.keys(state.assetUrls || {}).sort((a,b) => b.length - a.length);
-
-    let processedHtml = html;
-    for (const k of keys) {
-        const url = state.assetUrls[k];
-        if (!url) continue;
-        const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(esc, 'g');
-        processedHtml = processedHtml.replace(regex, url);
-    }
-
-    const source = `<!doctype html>
-<html lang="id">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<style>${css}</style>
-</head>
-<body>
-${processedHtml}
-<script>${js}<\/script>
-</body>
-</html>`;
-    return source;
-  }
-
-  // RUN PREVIEW
-  runBtn.addEventListener('click', async () => {
-    try {
-      const src = await buildPreviewSource();
-      previewIframe.srcdoc = src;
-    } catch (e) {
-      console.error('Preview error', e);
-      alert('Gagal membangun preview. Cek console.');
-    }
-  });
-
-  // basic drag-n-drop folder area (optional)
-  document.body.addEventListener('dragover', (e)=>{ e.preventDefault(); });
-  document.body.addEventListener('drop', async (e)=> {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files || []);
-    if (!files.length) return;
-    
-    const entries = [];
-    for(const item of e.dataTransfer.items) {
-      if(item.kind === 'file') {
-        const entry = item.webkitGetAsEntry();
-        if(entry.isDirectory) {
-          // You need a recursive function to read directories, skipping for simplicity here
-        } else {
-          entries.push(item.getAsFile());
-        }
-      }
-    }
-    // Simple file list processing for now
-    const processPromises = entries.map(async file => {
-       const relative = file.webkitRelativePath || file.name;
-       const entry = { file: file, isBinary: isBinaryFile(relative) };
-        if (!entry.isBinary) {
-            try { entry.text = await file.text(); } catch(err) { entry.text = ''; }
-        } else {
-            const blobUrl = URL.createObjectURL(file);
-            state.assetUrls[relative] = blobUrl;
-            state.assetUrls[relative.split('/').pop()] = blobUrl;
-        }
-        state.files[relative] = entry;
+    const state = { files: {}, assetUrls: {}, currentPath: null };
+    const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+        mode: 'xml', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true
     });
     
-    await Promise.all(processPromises);
-    renderTree();
-  });
+    ui.activityFilesBtn.onclick = () => {
+        if (window.innerWidth <= 768) ui.sidebar.classList.toggle('visible');
+        else ui.sidebar.classList.toggle('collapsed');
+    };
+    ui.previewCloseBtn.onclick = () => ui.previewOverlay.classList.remove('active');
 
-  // initial render
-  renderTree();
+    const isBinaryFile = (name) => /\.(jpe?g|png|gif|svg|webp|ico)$/i.test(name);
+    const isCodeFile = (name) => /\.(html?|css|js)$/i.test(name);
+    
+    function showEditor(show) {
+        ui.cmContainer.style.display = show ? 'block' : 'none';
+        ui.imagePreviewArea.classList.toggle('active', !show);
+    }
 
-  // revoke blob URLs when page unloads
-  window.addEventListener('beforeunload', () => {
-    Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
-  });
+    // --- PERUBAHAN DI SINI: Hanya render tab untuk file kode ---
+    function renderTabs() {
+        ui.editorTabsContainer.innerHTML = '';
+        const codeFiles = Object.keys(state.files).filter(isCodeFile).sort();
+        
+        if (codeFiles.length === 0) {
+            ui.editorTabsContainer.innerHTML = '<button class="btn active">Welcome</button>';
+            return;
+        }
+        codeFiles.forEach(path => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerHTML = `<i class="fa-regular fa-file-code" style="margin-right: 8px;"></i> ${path.split('/').pop()}`;
+            btn.title = path;
+            if (path === state.currentPath) btn.classList.add('active');
+            btn.onclick = () => openFile(path);
+            ui.editorTabsContainer.appendChild(btn);
+        });
+    }
+
+    function openFile(path) {
+        if (!state.files[path]) return;
+        state.currentPath = path;
+        const fileData = state.files[path];
+        if (isBinaryFile(path)) {
+            showEditor(false);
+            ui.imagePreviewImg.src = state.assetUrls[path];
+        } else {
+            showEditor(true);
+            const showText = (text) => {
+                fileData.text = text;
+                const mode = path.match(/\.css$/i) ? 'css' : (path.match(/\.js$/i) ? 'javascript' : 'xml');
+                editor.setOption('mode', mode);
+                editor.setValue(text || '');
+                setTimeout(() => editor.refresh(), 1);
+            };
+            if (fileData.text === undefined) { fileData.file.text().then(showText); } 
+            else { showText(fileData.text); }
+        }
+        renderTree();
+        renderTabs();
+    }
+    
+    function renderTree() {
+        ui.treeContainer.innerHTML = '';
+        if (Object.keys(state.files).length === 0) {
+            ui.treeContainer.innerHTML = '<div style="padding: 10px; color: var(--text-secondary);">(kosong)</div>';
+            return;
+        }
+        const fileTree = {};
+        for (const path in state.files) {
+            let currentLevel = fileTree;
+            const parts = path.split('/');
+            parts.forEach((part, index) => {
+                const isFile = index === parts.length - 1;
+                if (!currentLevel[part]) {
+                    currentLevel[part] = isFile ? { type: 'file', path: path } : { type: 'folder', children: {} };
+                }
+                currentLevel = currentLevel[part].children;
+            });
+        }
+        const rootUl = document.createElement('ul');
+        createDOMTree(fileTree, rootUl);
+        ui.treeContainer.appendChild(rootUl);
+    }
+    
+    function createDOMTree(node, parentElement) {
+        const sortedKeys = Object.keys(node).sort((a, b) => {
+            const nodeA = node[a]; const nodeB = node[b];
+            if (nodeA.type === nodeB.type) return a.localeCompare(b);
+            return nodeA.type === 'folder' ? -1 : 1;
+        });
+        for (const key of sortedKeys) {
+            const childNode = node[key];
+            const li = document.createElement('li');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'tree-item';
+            if (childNode.type === 'folder') {
+                itemDiv.innerHTML = `<span class="folder-toggle"><i class="fa-solid fa-chevron-right"></i></span> <i class="fa-regular fa-folder" style="color: var(--accent-blue)"></i> ${key}`;
+                const childrenUl = document.createElement('ul');
+                childrenUl.className = 'nested collapsed';
+                li.appendChild(itemDiv); li.appendChild(childrenUl);
+                itemDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    childrenUl.classList.toggle('collapsed');
+                    itemDiv.querySelector('.folder-toggle').classList.toggle('expanded');
+                };
+                createDOMTree(childNode.children, childrenUl);
+            } else {
+                if (state.currentPath === childNode.path) itemDiv.classList.add('active');
+                const iconClass = isBinaryFile(childNode.path) ? 'fa-regular fa-image' : 'fa-regular fa-file-lines';
+                itemDiv.innerHTML = `<i class="${iconClass}" style="color: var(--text-secondary); margin-left: 12px;"></i> ${key}`;
+                itemDiv.onclick = () => openFile(childNode.path);
+                li.appendChild(itemDiv);
+            }
+            parentElement.appendChild(li);
+        }
+    }
+
+    function clearAll() {
+        if (!confirm('Hapus semua file yang ada di memori?')) return;
+        Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
+        state.assetUrls = {}; state.files = {}; state.currentPath = null;
+        editor.setValue('// Editor siap.'); showEditor(true);
+        renderTree(); renderTabs();
+    }
+    ui.clearBtn.onclick = clearAll;
+
+    async function processFiles(fileList) {
+        clearAll();
+        for (const file of fileList) {
+            const relative = file.webkitRelativePath || file.name;
+            const isBin = isBinaryFile(relative);
+            state.files[relative] = { file, isBinary: isBin };
+            if (isBin) state.assetUrls[relative] = URL.createObjectURL(file);
+        }
+        renderTree(); renderTabs();
+        const htmlKey = Object.keys(state.files).find(k => /index\.html?$/i.test(k));
+        if (htmlKey) openFile(htmlKey);
+    }
+    ui.folderInput.addEventListener('change', (e) => processFiles(Array.from(e.target.files)));
+    ui.zipInput.addEventListener('change', async (e) => {
+        const f = e.target.files[0]; if (!f) return;
+        try {
+            clearAll();
+            const jszip = await JSZip.loadAsync(f);
+            const promises = [];
+            jszip.forEach((relPath, entry) => {
+                if (entry.dir) return;
+                const p = (async () => {
+                    const blob = await entry.async('blob');
+                    const fileObj = new File([blob], relPath.split('/').pop(), { type: blob.type });
+                    const isBin = isBinaryFile(relPath);
+                    state.files[relPath] = { file: fileObj, isBinary: isBin };
+                    if (isBin) state.assetUrls[relPath] = URL.createObjectURL(blob);
+                })();
+                promises.push(p);
+            });
+            await Promise.all(promises);
+            renderTree(); renderTabs();
+            const htmlKey = Object.keys(state.files).find(k => /index\.html?$/i.test(k));
+            if (htmlKey) openFile(htmlKey);
+        } catch (err) { console.error('ZIP error', err); alert('Gagal memproses zip'); }
+    });
+
+    ui.saveFileBtn.addEventListener('click', () => {
+        if (!state.currentPath || !state.files[state.currentPath] || isBinaryFile(state.currentPath)) return;
+        state.files[state.currentPath].text = editor.getValue();
+        alert('Tersimpan (di memori).');
+    });
+
+    async function buildPreviewSource() {
+        let html = '<h1>Project Kosong</h1>', css = '', js = '';
+        const findKey = (regex) => Object.keys(state.files).find(k => regex.test(k) && !isBinaryFile(k));
+        const readFile = async (key) => state.files[key] ? (state.files[key].text ?? await state.files[key].file.text()) : '';
+        
+        const htmlKey = findKey(/index\.html?$/i); if(htmlKey) html = await readFile(htmlKey);
+        const cssKey = findKey(/style\.css$/i); if(cssKey) css = await readFile(cssKey);
+        const jsKey = findKey(/script\.js$/i); if(jsKey) js = await readFile(jsKey);
+        let processedHtml = html;
+        for (const [path, url] of Object.entries(state.assetUrls)) {
+            processedHtml = processedHtml.replaceAll(path, url);
+        }
+        return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><style>${css}</style></head><body>${processedHtml}<script>${js}<\/script></body></html>`;
+    }
+
+    ui.runBtn.addEventListener('click', async () => {
+        try {
+            ui.previewIframe.srcdoc = await buildPreviewSource();
+            ui.previewOverlay.classList.add('active');
+        } catch (e) { console.error('Preview error', e); }
+    });
+    
+    renderTree(); renderTabs();
+    window.addEventListener('beforeunload', () => Object.values(state.assetUrls).forEach(URL.revokeObjectURL));
 });
 </script>
 </body>
