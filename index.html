@@ -164,68 +164,83 @@ document.addEventListener('DOMContentLoaded', () => {
     // === KODE YANG DIPERBAIKI ADA DI FUNGSI DI BAWAH INI ===
     // ==========================================================
     const togglePreview = (show) => {
-        if (show) {
-            let processedHtml = state.codeData.html;
+    if (show) {
+        let processedHtml = state.codeData.html;
+        let processedCss = state.codeData.css;
 
-            // Fungsi untuk meloloskan (escape) karakter khusus pada regular expression
-            const escapeRegExp = (string) => {
-                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& berarti seluruh string yang cocok
-            };
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-            // Ganti path gambar dengan Object URL menggunakan Regex yang sudah diloloskan
-            for (const [fileName, url] of Object.entries(state.assetUrls)) {
-    const escapedName = escapeRegExp(fileName);
-    const regex = new RegExp(escapedName, "g");
-    processedHtml = processedHtml.replace(regex, url);
-}
+        for (const [path, url] of Object.entries(state.assetUrls)) {
+            // Ganti di HTML (src / href)
+            const regexHtml = new RegExp(escapeRegExp(path), 'g');
+            processedHtml = processedHtml.replace(regexHtml, url);
 
-            const source = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${state.codeData.css}</style></head><body>${processedHtml}<script>${state.codeData.js}<\/script></body></html>`;
-            
-            elements.preview.desktopIframe.srcdoc = source;
-            elements.preview.mobileIframe.srcdoc = source;
+            // Ganti di CSS (url(...))
+            const regexCss = new RegExp(escapeRegExp(path), 'g');
+            processedCss = processedCss.replace(regexCss, url);
         }
-        elements.preview.overlay.classList.toggle('active', show);
-    };
+
+        const source = `
+            <!DOCTYPE html>
+            <html lang="id">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>${processedCss}</style>
+            </head>
+            <body>
+                ${processedHtml}
+                <script>${state.codeData.js}<\/script>
+            </body>
+            </html>
+        `;
+
+        elements.preview.desktopIframe.srcdoc = source;
+        elements.preview.mobileIframe.srcdoc = source;
+    }
+    elements.preview.overlay.classList.toggle('active', show);
+};
 
     const handleZipImport = async (file) => {
-        if (!file) return;
-        JSZip.loadAsync(file).then(async (zip) => {
-            // Hapus aset lama
-            Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
-            state.assetUrls = {};
-            
-            // Proses file teks
-            const htmlFile = zip.file(/index\.html?$/i)[0];
-            const cssFile = zip.file(/style\.css$/i)[0];
-            const jsFile = zip.file(/script\.js$/i)[0];
-            
-            if (htmlFile) state.codeData.html = await htmlFile.async('string');
-            if (cssFile) state.codeData.css = await cssFile.async('string');
-            if (jsFile) state.codeData.js = await jsFile.async('string');
+    if (!file) return;
+    JSZip.loadAsync(file).then(async (zip) => {
+        // Hapus aset lama
+        Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
+        state.assetUrls = {};
 
-            // Proses aset gambar
-const imagePromises = [];
-zip.forEach((relativePath, zipEntry) => {
-    if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath) && !relativePath.startsWith('__MACOSX/')) {
-        imagePromises.push(
-            zipEntry.async('blob').then(blob => {
-                // Ambil hanya nama file, tanpa folder
-                const fileName = relativePath.split('/').pop();
-                state.assetUrls[fileName] = URL.createObjectURL(blob);
-            })
-        );
-    }
-});
-            await Promise.all(imagePromises);
+        // Proses file teks
+        const htmlFile = zip.file(/index\.html?$/i)[0];
+        const cssFile = zip.file(/style\.css$/i)[0];
+        const jsFile = zip.file(/script\.js$/i)[0];
 
-            switchLanguage('html');
-            switchMainView('editor');
-            alert(`Proyek ${file.name} berhasil diimpor!`);
-        }).catch(err => {
-            console.error("Gagal memproses zip:", err);
-            alert("Gagal memproses file zip. Pastikan formatnya benar.");
+        if (htmlFile) state.codeData.html = await htmlFile.async('string');
+        if (cssFile) state.codeData.css = await cssFile.async('string');
+        if (jsFile) state.codeData.js = await jsFile.async('string');
+
+        // Proses aset gambar
+        const imagePromises = [];
+        zip.forEach((relativePath, zipEntry) => {
+            if (/\.(jpe?g|png|gif|svg|webp)$/i.test(relativePath) && !relativePath.startsWith('__MACOSX/')) {
+                imagePromises.push(
+                    zipEntry.async('blob').then(blob => {
+                        const fileName = relativePath.split('/').pop();
+                        // Simpan dengan path asli dan nama file
+                        state.assetUrls[relativePath] = URL.createObjectURL(blob);
+                        state.assetUrls[fileName] = URL.createObjectURL(blob);
+                    })
+                );
+            }
         });
-    };
+        await Promise.all(imagePromises);
+
+        switchLanguage('html');
+        switchMainView('editor');
+        alert(`Proyek ${file.name} berhasil diimpor!`);
+    }).catch(err => {
+        console.error("Gagal memproses zip:", err);
+        alert("Gagal memproses file zip. Pastikan formatnya benar.");
+    });
+};
 
     // === EVENT LISTENERS ===
     elements.nav.editor.onclick = () => switchMainView('editor');
