@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css"/>
 
 <style>
+/* === STYLING SAMA SEPERTI SEBELUMNYA === */
 :root{
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --activity-bar-bg:#333;
@@ -38,8 +39,6 @@ body{
   height:100vh;
   overflow:hidden;
 }
-
-/* Layout */
 .main-container{display:flex;flex:1;min-height:0}
 .activity-bar{
   width:48px;background:var(--activity-bar-bg);display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:10px 0;flex-shrink:0;z-index:101
@@ -49,7 +48,7 @@ body{
 .icon-btn:hover{color:var(--text-primary)}
 .sidebar{width:260px;background:var(--sidebar-bg);display:flex;flex-direction:column;transition:width .18s ease;flex-shrink:0}
 .sidebar.collapsed{width:0;padding:0;border-right:none;overflow:hidden}
-.sidebar-header{padding:10px 12px;font-size:12px;color:var(--text-secondary);text-transform:uppercase}
+.sidebar-header{padding:10px 12px;font-size:12px;color:var(--text-secondary);text-transform:uppercase;display:flex;align-items:center;gap:8px}
 .file-tree{flex:1;overflow:auto;padding:6px 8px;font-size:14px;min-height:0}
 .file-tree ul{list-style:none;margin:0;padding:0}
 .file-tree ul.nested{padding-left:12px}
@@ -59,12 +58,42 @@ body{
 .tree-item.active{background:var(--list-active-bg)}
 .folder-toggle{width:14px;text-align:center;transition:transform .15s}
 .folder-toggle.expanded{transform:rotate(90deg)}
-
 .workbench{flex:1;display:flex;flex-direction:column;min-width:0}
 .editor-area{flex:1;display:flex;flex-direction:column;min-height:0}
-.editor-tabs{display:flex;background:var(--tab-inactive-bg);flex-shrink:0;overflow-x:auto}
-.editor-tabs .btn{background:var(--tab-inactive-bg);border:none;border-right:1px solid var(--border-color);padding:8px 12px;white-space:nowrap;color:var(--text-primary)}
-.editor-tabs .btn.active{background:var(--tab-active-bg);cursor:pointer}
+.editor-tabs{display:flex;background:var(--tab-inactive-bg);flex-shrink:0;overflow-x:auto;align-items:center;padding:4px}
+.editor-tabs .btn{
+  background:var(--tab-inactive-bg);
+  border:none;
+  border-right:1px solid var(--border-color);
+  padding:6px 8px;
+  white-space:nowrap;
+  color:var(--text-primary);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  position: relative;
+  user-select:none;
+  border-radius:4px;
+  margin-right:6px;
+}
+.editor-tabs .btn.active{background:var(--tab-active-bg); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2)}
+.editor-tabs .btn .filename { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block; vertical-align:middle; }
+.editor-tabs .btn .close-btn {
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1;
+  user-select:none;
+  border-radius:3px;
+  background:transparent;
+  border:none;
+}
+.editor-tabs .btn .close-btn:hover {
+  color: #ff7777;
+  background: rgba(255,255,255,0.02);
+}
 .editor-wrap{flex:1;display:flex;min-height:0;position:relative}
 .cm-container{flex:1;position:relative;min-height:0}
 .CodeMirror{position:absolute;inset:0;height:100%!important;background:transparent!important;color:var(--text-primary);font-family:monospace}
@@ -74,12 +103,8 @@ body{
 .image-preview-area{display:none;position:absolute;inset:0;background-color:var(--editor-bg);padding:20px;align-items:center;justify-content:center}
 .image-preview-area.active{display:flex}
 .image-preview-area img{max-width:100%;max-height:100%;object-fit:contain}
-
-/* footer/status */
 .status-bar{height:28px;background:var(--status-bar-bg);color:white;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:13px;flex-shrink:0}
 .status-actions{display:flex;gap:8px;align-items:center}
-
-/* preview overlay */
 #preview-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;padding:3vh 4vw;align-items:center;justify-content:center}
 #preview-overlay.active{display:flex}
 .preview-modal{width:100%;height:100%;background:var(--sidebar-bg);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
@@ -87,15 +112,14 @@ body{
 .preview-header .close-btn{margin-left:auto;background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer}
 .preview-content{flex:1}
 iframe.preview{width:100%;height:100%;border:none;background:white}
-
-/* small screens */
+.folder-name{font-weight:600;color:var(--text-secondary);padding:6px 8px;border-radius:4px}
+.file-ext{font-size:12px;color:var(--text-secondary);padding-left:6px}
+.small-muted{font-size:12px;color:var(--text-secondary)}
 @media (max-width:768px){
   .sidebar{position:fixed;height:100vh;z-index:100;left:48px;margin-left:-100%}
   .sidebar.visible{margin-left:0;width:calc(100% - 48px);max-width:340px}
   .status-bar{display:none}
 }
-
-/* small cosmetic */
 .btn-primary{background:var(--accent-blue);color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer}
 .btn-ghost{background:transparent;color:var(--text-primary);border:1px solid rgba(255,255,255,0.04);padding:6px 10px;border-radius:4px;cursor:pointer}
 </style>
@@ -105,7 +129,8 @@ iframe.preview{width:100%;height:100%;border:none;background:white}
 <div class="main-container">
   <aside class="activity-bar">
     <div class="actions-group">
-      <button id="activity-files" class="icon-btn" title="Explorer"><i class="fa-solid fa-files"></i></button>
+      <!-- Tombol Explorer -->
+      <button id="toggle-explorer" class="icon-btn" title="Explorer"><i class="fa-solid fa-sitemap"></i></button>
       <label for="folder-input" class="icon-btn" title="Import Folder"><i class="fa-solid fa-folder-plus"></i></label>
       <label for="zip-input" class="icon-btn" title="Import ZIP"><i class="fa-solid fa-file-zipper"></i></label>
       <button id="run-btn-activity" class="icon-btn" title="Run Preview"><i class="fa-solid fa-play"></i></button>
@@ -116,8 +141,14 @@ iframe.preview{width:100%;height:100%;border:none;background:white}
   </aside>
 
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">Explorer</div>
+    <div class="sidebar-header">
+      <span>Explorer</span>
+      <button id="collapse-sidebar" class="icon-btn" title="Toggle" style="margin-left:auto"><i class="fa-solid fa-chevron-left"></i></button>
+    </div>
     <div class="file-tree" id="file-tree">(kosong)</div>
+    <div style="padding:8px;border-top:1px solid var(--border-color);font-size:12px;color:var(--text-secondary)">
+      <div class="small-muted">Imported files: <span id="file-count">0</span></div>
+    </div>
   </aside>
 
   <div class="workbench">
@@ -161,322 +192,375 @@ iframe.preview{width:100%;height:100%;border:none;background:white}
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-
-  if (typeof CodeMirror === 'undefined') { console.error('CodeMirror tidak ditemukan'); return; }
-  if (typeof JSZip === 'undefined') { console.error('JSZip tidak ditemukan'); return; }
-
   const ui = {
     sidebar: document.getElementById('sidebar'),
-    activityFilesBtn: document.getElementById('activity-files'),
-    previewOverlay: document.getElementById('preview-overlay'),
-    previewCloseBtn: document.getElementById('preview-close-btn'),
+    toggleExplorerBtn: document.getElementById('toggle-explorer'),
+    collapseSidebarBtn: document.getElementById('collapse-sidebar'),
+    treeContainer: document.getElementById('file-tree'),
     editorTabsContainer: document.getElementById('editor-tabs'),
     cmContainer: document.getElementById('cm-container'),
     imagePreviewArea: document.getElementById('image-preview-area'),
     imagePreviewImg: document.getElementById('image-preview-img'),
     folderInput: document.getElementById('folder-input'),
     zipInput: document.getElementById('zip-input'),
-    treeContainer: document.getElementById('file-tree'),
     runBtn: document.getElementById('run-btn-activity'),
     clearBtn: document.getElementById('clear-btn'),
+    previewOverlay: document.getElementById('preview-overlay'),
+    previewCloseBtn: document.getElementById('preview-close-btn'),
     previewIframe: document.getElementById('preview-iframe'),
     saveFileBtn: document.getElementById('save-file'),
+    fileCount: document.getElementById('file-count')
   };
 
   const state = { files: {}, assetUrls: {}, currentPath: null };
 
-  const textarea = document.getElementById('code-editor');
-  const editor = CodeMirror.fromTextArea(textarea, {
+  const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
     mode: 'htmlmixed', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true, viewportMargin: Infinity
   });
 
-  function refreshEditorLater(delay = 50) { setTimeout(() => editor.refresh(), delay); }
+  const isBinaryFile = (name='') => /\.(jpe?g|png|gif|svg|webp|ico|bmp)$/i.test(name);
+  const isCodeFile = (name='') => /\.(html?|css|js)$/i.test(name);
 
-  const isBinaryFile = (name = '') => /\.(jpe?g|png|gif|svg|webp|ico|bmp)$/i.test(name);
-  const isCodeFile = (name = '') => /\.(html?|css|js)$/i.test(name);
-
-  function showEditor(show) {
-    ui.cmContainer.style.display = show ? 'block' : 'none';
-    ui.imagePreviewArea.classList.toggle('active', !show);
-    refreshEditorLater(60);
+  function getModeFromPath(path = '') {
+    const ext = (path.split('.').pop() || '').toLowerCase();
+    if (ext === 'html' || ext === 'htm') return 'htmlmixed';
+    if (ext === 'css') return 'css';
+    if (ext === 'js') return 'javascript';
+    return 'htmlmixed';
   }
 
-  function renderTabs() {
-    ui.editorTabsContainer.innerHTML = '';
-    const codeFiles = Object.keys(state.files).filter(isCodeFile).sort();
-    if (codeFiles.length === 0) {
-      ui.editorTabsContainer.innerHTML = '<div style="padding:8px;color:var(--text-secondary)">No code files</div>';
-      return;
+  // Toggle sidebar visibility
+  ui.toggleExplorerBtn.addEventListener('click', () => {
+    ui.sidebar.classList.toggle('collapsed');
+  });
+  ui.collapseSidebarBtn.addEventListener('click', () => {
+    ui.sidebar.classList.toggle('collapsed');
+  });
+
+  function bindRunBtn(){
+    ui.runBtn.onclick = runPreview;
+  }
+
+  function runPreview() {
+    if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) return alert('Tidak ada index.html');
+    const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
+    let html = state.files[indexKey].text || '';
+    const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
+    const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
+    if (styleKey && state.files[styleKey]?.text) {
+      html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
     }
-    codeFiles.forEach(path => {
+    if (scriptKey && state.files[scriptKey]?.text) {
+      html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
+    }
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    ui.previewIframe.src = url;
+    ui.previewOverlay.classList.add('active');
+    ui.previewIframe.onload = () => URL.revokeObjectURL(url);
+  }
+
+  async function processFiles(fileList) {
+    clearAll();
+    for (const file of fileList) {
+      const name = file.webkitRelativePath || file.name;
+      const binary = isBinaryFile(name);
+      state.files[name] = { file, text: binary ? undefined : await file.text(), isBinary: binary };
+      if (binary) state.assetUrls[name] = URL.createObjectURL(file);
+    }
+    ensureDefaultFiles();
+    const firstCode = Object.keys(state.files).filter(isCodeFile)[0];
+    await openFile(firstCode);
+    bindRunBtn();
+    renderTree();
+  }
+
+  async function importZip(file) {
+    clearAll();
+    const zip = await JSZip.loadAsync(file);
+    for (const name of Object.keys(zip.files)) {
+      if (zip.files[name].dir) continue;
+      if (isBinaryFile(name)) {
+        const blob = await zip.files[name].async('blob');
+        state.assetUrls[name] = URL.createObjectURL(blob);
+        state.files[name] = { file:null, text:undefined, isBinary:true };
+      } else {
+        const text = await zip.files[name].async('text');
+        state.files[name] = { file:null, text, isBinary:false };
+      }
+    }
+    ensureDefaultFiles();
+    const firstCode = Object.keys(state.files).filter(isCodeFile)[0];
+    await openFile(firstCode);
+    bindRunBtn();
+    renderTree();
+  }
+
+  function ensureDefaultFiles(){
+    ['index.html','style.css','script.js'].forEach(f => {
+      if (!Object.keys(state.files).some(k => k.endsWith(f))) {
+        state.files[f] = { text:'', isBinary:false, file:null };
+      }
+    });
+  }
+
+  function clearAll(){
+    for (const url of Object.values(state.assetUrls)) try{ URL.revokeObjectURL(url) }catch(e){}
+    Object.assign(state,{files:{},assetUrls:{},currentPath:null});
+    renderTabs(); renderTree();
+    editor.setValue('// Editor kosong');
+    showEditor(); hideImagePreview();
+    updateFileCount();
+  }
+
+  function renderTabs(){
+    ui.editorTabsContainer.innerHTML = '';
+    const codeKeys = Object.keys(state.files).filter(isCodeFile).sort((a,b)=>a.localeCompare(b));
+    codeKeys.forEach(path=>{
+      const filename = path.split('/').pop();
       const btn = document.createElement('button');
       btn.className = 'btn';
-      btn.textContent = path.split('/').pop();
       if (path === state.currentPath) btn.classList.add('active');
-      btn.onclick = () => openFile(path);
+
+      const fnameSpan = document.createElement('span');
+      fnameSpan.className = 'filename';
+      fnameSpan.textContent = filename;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'close-btn';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        closeFile(path);
+      });
+
+      btn.appendChild(fnameSpan);
+      btn.appendChild(closeBtn);
+      btn.addEventListener('click', () => openFile(path));
       ui.editorTabsContainer.appendChild(btn);
     });
   }
 
-  async function openFile(path) {
-    if (!state.files[path]) return;
-    state.currentPath = path;
-    const fileData = state.files[path];
-    renderTree();
-    renderTabs();
-
-    if (fileData.isBinary) {
-      showEditor(false);
-      ui.imagePreviewImg.src = state.assetUrls[path] || '';
-      return;
+  function closeFile(path) {
+    if (state.assetUrls[path]) {
+      try{ URL.revokeObjectURL(state.assetUrls[path]); }catch(e){}
+      delete state.assetUrls[path];
     }
-
-    showEditor(true);
-
-    let text = fileData.text;
-    if (text === undefined) {
-      try {
-        if (fileData.file && typeof fileData.file.text === 'function') {
-          text = await fileData.file.text();
-        } else {
-          text = fileData.text ?? '';
-        }
-      } catch (e) {
-        console.error('Gagal baca file', e);
-        text = '';
-      }
-    }
-    fileData.text = text;
-
-    const mode = path.match(/\.css$/i) ? 'css' : (path.match(/\.js$/i) ? 'javascript' : 'htmlmixed');
-    editor.setOption('mode', mode);
-    editor.setValue(text || '');
-    refreshEditorLater(30);
-  }
-
-  function renderTree() {
-    ui.treeContainer.innerHTML = '';
-    const keys = Object.keys(state.files);
-    if (keys.length === 0) {
-      ui.treeContainer.innerHTML = '<div style="padding:10px;color:var(--text-secondary)">(kosong)</div>';
-      return;
-    }
-    const tree = {};
-    for (const path of keys) {
-      let current = tree;
-      const parts = path.split('/');
-      parts.forEach((part, idx) => {
-        const isFile = idx === parts.length - 1;
-        if (!current[part]) {
-          current[part] = isFile ? { type: 'file', path } : { type: 'folder', children: {} };
-        }
-        if (!isFile) current = current[part].children;
-      });
-    }
-    const rootUl = document.createElement('ul');
-    createDOMTree(tree, rootUl);
-    ui.treeContainer.appendChild(rootUl);
-  }
-
-  function createDOMTree(node, parentEl) {
-    const keys = Object.keys(node).sort((a, b) => {
-      const A = node[a], B = node[b];
-      if (A.type === B.type) return a.localeCompare(b);
-      return A.type === 'folder' ? -1 : 1;
-    });
-    for (const k of keys) {
-      const child = node[k];
-      const li = document.createElement('li');
-      const item = document.createElement('div');
-      item.className = 'tree-item';
-      if (child.type === 'folder') {
-        item.innerHTML = `<span class="folder-toggle"><i class="fa-solid fa-chevron-right"></i></span> <i class="fa-regular fa-folder" style="color:var(--accent-blue)"></i> ${k}`;
-        const childrenUl = document.createElement('ul');
-        childrenUl.className = 'nested collapsed';
-        li.appendChild(item);
-        li.appendChild(childrenUl);
-        item.onclick = (e) => {
-          e.stopPropagation();
-          childrenUl.classList.toggle('collapsed');
-          const ft = item.querySelector('.folder-toggle');
-          if (ft) ft.classList.toggle('expanded');
-        };
-        createDOMTree(child.children, childrenUl);
+    delete state.files[path];
+    if (state.currentPath === path) {
+      const remaining = Object.keys(state.files).filter(isCodeFile);
+      if (remaining.length) {
+        openFile(remaining[0]);
       } else {
-        if (state.currentPath === child.path) item.classList.add('active');
-        const icon = isBinaryFile(child.path) ? 'fa-regular fa-image' : 'fa-regular fa-file-lines';
-        item.innerHTML = `<i class="${icon}" style="color:var(--text-secondary);margin-left:6px"></i> ${k}`;
-        item.onclick = () => openFile(child.path);
-        li.appendChild(item);
+        state.currentPath = null;
+        editor.setValue('// Editor kosong');
+        showEditor();
+        hideImagePreview();
       }
-      parentEl.appendChild(li);
-    }
-  }
-
-  function clearAll() {
-    if (!confirm('Hapus semua file di memori?')) return;
-    Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
-    state.files = {};
-    state.assetUrls = {};
-    state.currentPath = null;
-    editor.setValue('// Editor siap.');
-    showEditor(true);
-    renderTree();
-    renderTabs();
-    initDefaultFiles();
-  }
-
-  async function processFiles(fileList) {
-  for (const file of fileList) {
-    const relative = file.webkitRelativePath || file.name;
-    const bin = isBinaryFile(relative);
-
-    if (bin) {
-      if (state.assetUrls[relative]) URL.revokeObjectURL(state.assetUrls[relative]);
-      state.assetUrls[relative] = URL.createObjectURL(file);
-    }
-
-    // Reset text ke undefined supaya konten baru terbaca ulang
-    state.files[relative] = { file, text: undefined, isBinary: bin };
-  }
-
-  ['index.html', 'style.css', 'script.js'].forEach(f => {
-    if (!state.files[f]) state.files[f] = { text: '', isBinary: false };
-  });
-
-  const lastFile = fileList[fileList.length - 1];
-  const lastFilePath = lastFile.webkitRelativePath || lastFile.name;
-  state.currentPath = lastFilePath;
-
-  renderTree();
-  renderTabs();
-  await openFile(state.currentPath);
-}
-
-async function loadZip(file) {
-  try {
-    const zip = await JSZip.loadAsync(file);
-    const filesInZip = [];
-    zip.forEach((relativePath, zipEntry) => {
-      if (!zipEntry.dir) filesInZip.push(zipEntry);
-    });
-
-    for (const zipEntry of filesInZip) {
-      const content = await zipEntry.async('blob');
-      const fileObj = new File([content], zipEntry.name);
-      const relative = zipEntry.name;
-      const bin = isBinaryFile(relative);
-
-      if (bin) {
-        if (state.assetUrls[relative]) URL.revokeObjectURL(state.assetUrls[relative]);
-        state.assetUrls[relative] = URL.createObjectURL(fileObj);
-      }
-
-      // Reset text ke undefined supaya konten baru terbaca ulang
-      state.files[relative] = { file: fileObj, text: undefined, isBinary: bin };
-    }
-
-    ['index.html', 'style.css', 'script.js'].forEach(f => {
-      if (!state.files[f]) state.files[f] = { text: '', isBinary: false };
-    });
-
-    if (filesInZip.length) {
-      state.currentPath = filesInZip[filesInZip.length - 1].name;
-    } else if (state.files['index.html']) {
-      state.currentPath = 'index.html';
     } else {
-      state.currentPath = Object.keys(state.files)[0];
+      renderTabs();
     }
-
     renderTree();
+    updateFileCount();
+  }
+
+  async function openFile(path){
+    if(!path || !state.files[path]) return;
+    state.currentPath = path;
     renderTabs();
-    await openFile(state.currentPath);
-  } catch (e) {
-    alert('Gagal membuka file ZIP: ' + e.message);
-  }
-}
+    if (state.files[path].isBinary) {
+      hideEditor();
+      ui.imagePreviewImg.src = state.assetUrls[path] || '';
+      ui.imagePreviewArea.classList.add('active');
+      return;
+    }
 
-  function initDefaultFiles() {
-    ['index.html', 'style.css', 'script.js'].forEach(f => {
-      if (!state.files[f]) state.files[f] = { text: '', isBinary: false };
+    showEditor();
+    hideImagePreview();
+
+    const text = state.files[path].text ?? '';
+    editor.setValue(text);
+    const mode = getModeFromPath(path);
+    editor.setOption('mode', mode);
+    setTimeout(()=>editor.refresh(), 50);
+  }
+
+  // Build nested tree data structure from paths
+  function buildTree(paths) {
+    const root = {};
+    paths.forEach(full => {
+      const parts = full.split('/').filter(Boolean);
+      let node = root;
+      parts.forEach((p, idx) => {
+        if (!node[p]) node[p] = { __files: {}, __children: {} };
+        if (idx === parts.length - 1) {
+          // this is a file
+          node[p].__file = true;
+          node[p].__path = full;
+        } else {
+          node = node[p].__children;
+        }
+      });
     });
-    if (!state.currentPath) state.currentPath = 'index.html';
+    return root;
   }
 
-  // Simpan isi editor ke state saat berubah
-  editor.on('change', () => {
-    if (state.currentPath && state.files[state.currentPath] && !state.files[state.currentPath].isBinary) {
-      state.files[state.currentPath].text = editor.getValue();
+  // Render tree recursively with folders and files
+  function renderTree() {
+    const files = Object.keys(state.files).sort((a,b)=>a.localeCompare(b));
+    if (!files.length) {
+      ui.treeContainer.innerHTML = '(kosong)';
+      ui.fileCount.textContent = '0';
+      return;
     }
-  });
+    // create folder structure map
+    const treeRoot = {};
+    files.forEach(full => {
+      const parts = full.split('/');
+      let node = treeRoot;
+      parts.forEach((part, idx) => {
+        if (!node[part]) node[part] = { __path: parts.slice(0, idx+1).join('/'), __children: {}, __isFile: false };
+        if (idx === parts.length - 1) {
+          node[part].__isFile = true;
+          node[part].__full = full;
+        }
+        node = node[part].__children;
+      });
+    });
 
-  // Event UI
-  ui.activityFilesBtn.onclick = () => {
-    if (ui.sidebar.classList.contains('collapsed')) {
-      ui.sidebar.classList.remove('collapsed');
-    } else {
-      ui.sidebar.classList.add('collapsed');
+    function createList(nodeObj) {
+      const ul = document.createElement('ul');
+      Object.keys(nodeObj).forEach(key => {
+        if (key.startsWith('__')) return;
+        const item = nodeObj[key];
+        const li = document.createElement('li');
+        const entry = document.createElement('div');
+        entry.className = 'tree-item';
+        // determine if folder or file
+        const isFile = item.__isFile && Object.keys(item.__children).length === 0;
+        if (isFile) {
+          entry.innerHTML = `<i class="fa-regular fa-file"></i> <span style="overflow:hidden;text-overflow:ellipsis">${key}</span>`;
+          entry.addEventListener('click', () => {
+            const path = item.__full;
+            if (isCodeFile(path) || state.files[path]?.isBinary) openFile(path);
+          });
+        } else {
+          // folder
+          const toggle = document.createElement('span');
+          toggle.className = 'folder-toggle';
+          toggle.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+          const label = document.createElement('span');
+          label.className = 'folder-name';
+          label.textContent = key;
+          entry.appendChild(toggle);
+          entry.appendChild(label);
+          // nested children
+          const nested = createList(item.__children);
+          nested.className = 'nested collapsed';
+          entry.addEventListener('click', (ev) => {
+            // only toggle when clicking folder area, not inner nested file clicks
+            if (nested.classList.contains('collapsed')) {
+              nested.classList.remove('collapsed');
+              toggle.classList.add('expanded');
+            } else {
+              nested.classList.add('collapsed');
+              toggle.classList.remove('expanded');
+            }
+            ev.stopPropagation();
+          });
+          li.appendChild(entry);
+          li.appendChild(nested);
+          ul.appendChild(li);
+          return;
+        }
+        li.appendChild(entry);
+        ul.appendChild(li);
+      });
+      return ul;
     }
-  };
 
-  ui.folderInput.onchange = async e => {
-    if (e.target.files.length === 0) return;
-    await processFiles(e.target.files);
-    ui.folderInput.value = '';
-    if (ui.sidebar.classList.contains('collapsed')) ui.sidebar.classList.remove('collapsed');
-  };
+    // Convert treeRoot which currently nests children under __children into a simpler nested object
+    function toRenderable(node) {
+      const out = {};
+      Object.keys(node).forEach(k => {
+        out[k] = { __children: {} , __isFile: node[k].__isFile, __full: node[k].__full };
+        // recursively add children
+        if (node[k].__children) {
+          out[k].__children = toRenderable(node[k].__children);
+        }
+      });
+      return out;
+    }
 
-  ui.zipInput.onchange = async e => {
-    if (e.target.files.length === 0) return;
-    await loadZip(e.target.files[0]);
-    ui.zipInput.value = '';
-    if (ui.sidebar.classList.contains('collapsed')) ui.sidebar.classList.remove('collapsed');
-  };
+    const renderable = toRenderable(treeRoot);
+    ui.treeContainer.innerHTML = '';
+    ui.treeContainer.appendChild(createList(renderable));
+    ui.fileCount.textContent = files.length;
+  }
 
+  function hideImagePreview(){
+    ui.imagePreviewArea.classList.remove('active');
+    ui.imagePreviewImg.src = '';
+  }
+  function showEditor(){
+    document.querySelector('.cm-container').style.display = 'block';
+  }
+  function hideEditor(){
+    document.querySelector('.cm-container').style.display = 'none';
+  }
+
+  // update count small helper
+  function updateFileCount(){ ui.fileCount.textContent = Object.keys(state.files).length; }
+
+  // Events
+  ui.folderInput.onchange = e => {
+    if (e.target.files && e.target.files.length) processFiles(e.target.files);
+    // reset input so same folder can be re-selected later
+    e.target.value = '';
+  };
+  ui.zipInput.onchange = e => {
+    if (e.target.files && e.target.files[0]) importZip(e.target.files[0]);
+    e.target.value = '';
+  };
   ui.clearBtn.onclick = clearAll;
-
-  ui.runBtn.onclick = () => {
-    if (!state.currentPath) return alert('Tidak ada file untuk preview.');
-    if (isBinaryFile(state.currentPath)) return alert('Tidak bisa preview file binary.');
-    const html = editor.getValue();
-    const blob = new Blob([html], {type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    ui.previewIframe.src = url;
-    ui.previewOverlay.classList.add('active');
-  };
-
-  ui.previewCloseBtn.onclick = () => {
-    ui.previewOverlay.classList.remove('active');
-    if (ui.previewIframe.src) {
-      URL.revokeObjectURL(ui.previewIframe.src);
-      ui.previewIframe.src = '';
+  ui.saveFileBtn.onclick = () => {
+    if(state.currentPath && state.files[state.currentPath] && !state.files[state.currentPath].isBinary) {
+      state.files[state.currentPath].text = editor.getValue();
+      alert('File saved ke memori (session).');
     }
   };
+  ui.previewCloseBtn.onclick = () => ui.previewOverlay.classList.remove('active');
+  bindRunBtn();
 
-  ui.saveFileBtn.onclick = () => {
-    if (!state.currentPath) return alert('Tidak ada file yang aktif.');
-    const fileData = state.files[state.currentPath];
-    if (fileData.isBinary) return alert('Tidak bisa simpan file binary.');
-    const content = editor.getValue();
-    const blob = new Blob([content], {type:'text/plain'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = state.currentPath.split('/').pop();
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
+  // Init default files and open index
+  state.files['index.html']={text:'<!doctype html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <title>Index</title>\n</head>\n<body>\n  <h1>Halo</h1>\n</body>\n</html>',isBinary:false,file:null};
+  state.files['style.css']={text:'/* style.css */\nbody{font-family:Arial}',isBinary:false,file:null};
+  state.files['script.js']={text:'// script.js\nconsole.log(\"hello\");',isBinary:false,file:null};
 
-  // Init
-  initDefaultFiles();
-  renderTree();
-  renderTabs();
-  openFile(state.currentPath);
+  (async function awaitOpenDefault(){
+    const idx = Object.keys(state.files).find(k=>k.endsWith('index.html')) || Object.keys(state.files).filter(isCodeFile)[0];
+    await openFile(idx);
+    renderTabs();
+    renderTree();
+    updateFileCount();
+  })();
 
-  // Refresh editor sedikit setelah render
-  setTimeout(() => editor.refresh(), 100);
+  // drag & drop support for files and zip
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    const items = e.dataTransfer.files;
+    if (!items || !items.length) return;
+    // if single zip file -> import zip
+    if (items.length === 1 && items[0].name.toLowerCase().endsWith('.zip')) {
+      await importZip(items[0]);
+      return;
+    }
+    // otherwise treat as folder/file list (if webkitRelativePath available it will be used)
+    await processFiles(items);
+  });
 
 });
 </script>
-
 </body>
 </html>
