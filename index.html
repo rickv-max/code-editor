@@ -338,15 +338,21 @@ function runPreview() {
     clearAll();
     const zip = await JSZip.loadAsync(file);
     for (const name of Object.keys(zip.files)) {
-      if (zip.files[name].dir) continue;
-      if (isBinaryFile(name)) {
-        const blob = await zip.files[name].async('blob');
-        state.assetUrls[name] = URL.createObjectURL(blob);
-        state.files[name] = { file:null, text:undefined, isBinary:true };
-      } else {
-        const text = await zip.files[name].async('text');
-        state.files[name] = { file:null, text, isBinary:false };
-      }
+        if (zip.files[name].dir) continue; // Lewati folder
+
+        // Gunakan fungsi isBinaryFile untuk memeriksa tipe file
+        if (isBinaryFile(name)) {
+            // Proses sebagai file gambar (binary)
+            // PERHATIKAN PENGGUNAAN KUTIP LURUS YANG BENAR: 'blob'
+            const blob = await zip.files[name].async('blob'); 
+            state.assetUrls[name] = URL.createObjectURL(blob);
+            state.files[name] = { file: null, text: undefined, isBinary: true };
+        } else {
+            // Proses sebagai file teks (html, css, js, dll)
+            // PERHATIKAN PENGGUNAAN KUTIP LURUS YANG BENAR: 'text'
+            const text = await zip.files[name].async('text');
+            state.files[name] = { file: null, text: text, isBinary: false };
+        }
     }
     ensureDefaultFiles();
     const firstCode = Object.keys(state.files).filter(isCodeFile)[0];
