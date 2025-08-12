@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.runBtn.onclick = runPreview;
   }
 
-   // GANTI HANYA FUNGSI runPreview ANDA DENGAN VERSI FINAL INI.
+   // GANTI SELURUH FUNGSI runPreview ANDA DENGAN VERSI FINAL YANG TERPADU INI.
 function runPreview() {
     const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
     if (!indexKey) {
@@ -266,60 +266,78 @@ function runPreview() {
 
     let html = state.files[indexKey].text || '';
 
+    // =====================================================================
+    // === LANGKAH 1: MEMBUAT PETA ASET TERPADU (GAMBAR, CSS, JS) ===
+    // =====================================================================
+    const unifiedAssetMap = { ...state.assetUrls }; // Mulai dengan semua gambar yang sudah ada
+
+    // Fungsi kecil untuk menentukan tipe file
+    const getMimeType = (path) => {
+        if (path.endsWith('.css')) return 'text/css';
+        if (path.endsWith('.js')) return 'application/javascript';
+        return 'text/plain';
+    };
+
+    // Tambahkan file teks (CSS, JS) ke peta aset dengan membuat Blob URL baru
+    for (const path in state.files) {
+        const fileData = state.files[path];
+        // Jika file adalah file teks (bukan gambar) dan punya konten
+        if (!fileData.isBinary && fileData.text) {
+            const mimeType = getMimeType(path);
+            const blob = new Blob([fileData.text], { type: mimeType });
+            unifiedAssetMap[path] = URL.createObjectURL(blob);
+        }
+    }
+    // Sekarang `unifiedAssetMap` berisi URL untuk SEMUA file.
+    // =====================================================================
+
+
     const pathReplacer = (match, attribute, pathValue) => {
-        // Abaikan link absolut, link data, atau path kosong
         if (!pathValue || pathValue.startsWith('http') || pathValue.startsWith('data:') || pathValue.startsWith('//')) {
             return match;
         }
 
-        // Membersihkan path dari HTML, menghapus './' di awal jika ada.
-        // Contoh: "./assets/images/logo.jpg" menjadi "assets/images/logo.jpg"
         const cleanPathValue = pathValue.replace(/^\.\//, '');
-        
         let matchedAssetKey = null;
 
-        // Loop melalui semua aset gambar yang kita miliki
-        for (const assetKey in state.assetUrls) {
-            
-            // === INI ADALAH LOGIKA KUNCI YANG DIPERBAIKI ===
-            // Apakah path aset LENGKAP (misal: "nama-project/assets/images/logo.jpg")
-            // diakhiri dengan path dari HTML (misal: "assets/images/logo.jpg")?
+        for (const assetKey in unifiedAssetMap) { // Mencari di PETA TERPADU
             if (assetKey.endsWith(cleanPathValue)) {
-                
-                // Ini adalah pemeriksaan keamanan untuk menghindari salah cocok.
-                // Contoh: 'myphoto.jpg' tidak akan salah cocok dengan 'anotherphoto.jpg'
                 const precedingCharIndex = assetKey.length - cleanPathValue.length - 1;
                 if (precedingCharIndex < 0 || assetKey[precedingCharIndex] === '/') {
                     matchedAssetKey = assetKey;
-                    break; // Jodoh ditemukan, hentikan pencarian!
+                    break;
                 }
             }
         }
 
         if (matchedAssetKey) {
-            // Jika jodoh ditemukan, ganti path dengan Blob URL yang benar
-            return `${attribute}="${state.assetUrls[matchedAssetKey]}"`;
+            return `${attribute}="${unifiedAssetMap[matchedAssetKey]}"`; // Mengambil dari PETA TERPADU
         }
         
-        // Jika tidak ada jodoh, kembalikan seperti aslinya
         return match;
     };
 
-    // Jalankan penggantian pada seluruh dokumen HTML
     html = html.replace(/(src|href)=["']([^"']+)["']/g, pathReplacer);
 
-    // Bagian sisipan CSS/JS tetap sama
-    const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
-    if (styleKey && state.files[styleKey]?.text) {
-        html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
-    }
-    const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
-    if (scriptKey && state.files[scriptKey]?.text) {
-        html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
-    }
+    // =====================================================================
+    // HAPUS BAGIAN INI! Karena semua sudah ditangani oleh pathReplacer.
+    // const styleKey = ...
+    // const scriptKey = ...
+    // =====================================================================
 
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
+    const finalBlob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(finalBlob);
+    
+    // Saat preview ditutup, kita harus membersihkan SEMUA Blob URL yang dibuat
+    ui.previewCloseBtn.onclick = () => {
+        ui.previewOverlay.classList.remove('active');
+        URL.revokeObjectURL(url); // Hapus URL untuk file HTML itu sendiri
+        for(const assetUrl in unifiedAssetMap){
+            URL.revokeObjectURL(unifiedAssetMap[assetUrl]); // Hapus URL untuk semua aset
+        }
+        ui.previewIframe.src = 'about:blank';
+    };
+    
     ui.previewIframe.src = url;
     ui.previewOverlay.classList.add('active');
 }
