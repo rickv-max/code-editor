@@ -1,118 +1,103 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>VS Code Clone - Web Editor</title>
+<title>Editor ZIP & Folder — Demo</title>
 
+<!-- Font Awesome + CodeMirror CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css"/>
 
 <style>
-  :root {
-    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --activity-bar-bg: #333333;
-    --sidebar-bg: #252526;
-    --editor-bg: #1e1e1e;
-    --status-bar-bg: #007acc;
-    --border-color: #3e3e42;
-    --text-primary: #cccccc;
-    --text-secondary: #808080;
-    --list-hover-bg: #2a2d2e;
-    --list-active-bg: #37373d;
-    --accent-blue: #007acc;
-    --tab-inactive-bg: #2d2d2d;
-    --tab-active-bg: var(--editor-bg);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: var(--font-family);
-    background: var(--editor-bg);
-    color: var(--text-primary);
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-  }
-  
-  .main-container { display: flex; flex: 1; min-height: 0; }
-  .icon-btn { color: var(--text-secondary); background: none; border: none; font-size: 22px; padding: 10px; width: 100%; cursor: pointer; position: relative; }
-  .icon-btn:hover { color: var(--text-primary); }
+:root{
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --activity-bar-bg:#333;
+  --sidebar-bg:#252526;
+  --editor-bg:#1e1e1e;
+  --status-bar-bg:#007acc;
+  --border-color:#3e3e42;
+  --text-primary:#cccccc;
+  --text-secondary:#808080;
+  --list-hover-bg:#2a2d2e;
+  --list-active-bg:#37373d;
+  --accent-blue:#007acc;
+  --tab-inactive-bg:#2d2d2d;
+  --tab-active-bg:var(--editor-bg);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--font-family);
+  background:var(--editor-bg);
+  color:var(--text-primary);
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+  overflow:hidden;
+}
 
-  /* --- ACTIVITY BAR (Kiri) --- */
-  .activity-bar {
-    width: 48px;
-    background: var(--activity-bar-bg);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    flex-shrink: 0;
-    z-index: 101;
-  }
-  .activity-bar .actions-group { display: flex; flex-direction: column; gap: 10px; width: 100%;}
-  .activity-bar .icon-btn.active { color: var(--text-primary); }
-  .activity-bar .icon-btn.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 70%; background: var(--text-primary); }
+/* Layout */
+.main-container{display:flex;flex:1;min-height:0}
+.activity-bar{
+  width:48px;background:var(--activity-bar-bg);display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:10px 0;flex-shrink:0;z-index:101
+}
+.activity-bar .actions-group{display:flex;flex-direction:column;gap:10px;width:100%}
+.icon-btn{color:var(--text-secondary);background:none;border:none;font-size:18px;padding:8px;cursor:pointer;width:100%}
+.icon-btn:hover{color:var(--text-primary)}
+.sidebar{width:260px;background:var(--sidebar-bg);display:flex;flex-direction:column;transition:width .18s ease;flex-shrink:0}
+.sidebar.collapsed{width:0;padding:0;border-right:none;overflow:hidden}
+.sidebar-header{padding:10px 12px;font-size:12px;color:var(--text-secondary);text-transform:uppercase}
+.file-tree{flex:1;overflow:auto;padding:6px 8px;font-size:14px;min-height:0}
+.file-tree ul{list-style:none;margin:0;padding:0}
+.file-tree ul.nested{padding-left:12px}
+.file-tree ul.collapsed{display:none}
+.tree-item{padding:6px 8px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tree-item:hover{background:var(--list-hover-bg)}
+.tree-item.active{background:var(--list-active-bg)}
+.folder-toggle{width:14px;text-align:center;transition:transform .15s}
+.folder-toggle.expanded{transform:rotate(90deg)}
 
-  /* --- SIDEBAR (Explorer) --- */
-  .sidebar {
-    width: 250px;
-    background: var(--sidebar-bg);
-    display: flex;
-    flex-direction: column;
-    transition: width 0.2s ease, margin-left 0.2s ease;
-    flex-shrink: 0;
-  }
-  .sidebar.collapsed { width: 0; padding: 0; border-right: none;}
-  .sidebar-header { padding: 10px 15px; font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px; white-space: nowrap; }
-  .file-tree { flex: 1; overflow: auto; font-size: 14px; padding: 0 5px; min-height: 0; }
-  .file-tree ul { list-style: none; margin: 0; padding: 0; }
-  .file-tree ul.nested { padding-left: 15px; }
-  .file-tree ul.collapsed { display: none; }
-  .file-tree li { border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-  .tree-item { padding: 4px 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-  .tree-item:hover { background: var(--list-hover-bg); }
-  .tree-item.active { background: var(--list-active-bg); }
-  .tree-item .folder-toggle { width: 12px; text-align: center; transition: transform 0.1s ease; }
-  .tree-item .folder-toggle.expanded { transform: rotate(90deg); }
+.workbench{flex:1;display:flex;flex-direction:column;min-width:0}
+.editor-area{flex:1;display:flex;flex-direction:column;min-height:0}
+.editor-tabs{display:flex;background:var(--tab-inactive-bg);flex-shrink:0;overflow-x:auto}
+.editor-tabs .btn{background:var(--tab-inactive-bg);border:none;border-right:1px solid var(--border-color);padding:8px 12px;white-space:nowrap;color:var(--text-primary)}
+.editor-tabs .btn.active{background:var(--tab-active-bg);cursor:pointer}
+.editor-wrap{flex:1;display:flex;min-height:0;position:relative}
+.cm-container{flex:1;position:relative;min-height:0}
+.CodeMirror{position:absolute;inset:0;height:100%!important;background:transparent!important;color:var(--text-primary);font-family:monospace}
+.CodeMirror-scroll{background:transparent!important}
+.CodeMirror-gutters{background:transparent!important;border-right:1px solid var(--border-color)}
+.cm-s-dracula .CodeMirror-linebackground{background:transparent!important}
+.image-preview-area{display:none;position:absolute;inset:0;background-color:var(--editor-bg);padding:20px;align-items:center;justify-content:center}
+.image-preview-area.active{display:flex}
+.image-preview-area img{max-width:100%;max-height:100%;object-fit:contain}
 
-  /* --- WORKBENCH (Editor + Panel) --- */
-  .workbench { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-  .editor-area { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-  .editor-tabs { display: flex; background: var(--tab-inactive-bg); flex-shrink: 0; overflow-x: auto; }
-  .editor-tabs .btn { background: var(--tab-inactive-bg); border: none; border-right: 1px solid var(--border-color); border-radius: 0; padding: 8px 15px; white-space: nowrap; }
-  .editor-tabs .btn.active { background: var(--tab-active-bg); }
-  .editor-wrap { flex: 1; background: var(--editor-bg); display: flex; min-height: 0; position: relative; }
-  .cm-container { flex: 1; position: relative; }
-  .CodeMirror { position: absolute; inset: 0; height: 100%; width: 100%; }
-  
-  /* --- STATUS BAR --- */
-  .status-bar { height: 22px; background: var(--status-bar-bg); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; font-size: 12px; flex-shrink: 0; }
-  .status-bar .status-item { display: flex; align-items: center; gap: 5px; }
-  
-  /* --- Area Pratinjau Gambar --- */
-  .image-preview-area { display: none; position: absolute; inset: 0; background-color: var(--editor-bg); padding: 20px; align-items: center; justify-content: center; }
-  .image-preview-area.active { display: flex; }
-  .image-preview-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
+/* footer/status */
+.status-bar{height:28px;background:var(--status-bar-bg);color:white;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:13px;flex-shrink:0}
+.status-actions{display:flex;gap:8px;align-items:center}
 
-  /* --- MODAL PREVIEW (untuk Run) --- */
-  #preview-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; padding: 4vh 4vw; align-items: center; justify-content: center; }
-  #preview-overlay.active { display: flex; }
-  .preview-modal { width: 100%; height: 100%; background: var(--sidebar-bg); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; }
-  .preview-header { padding: 8px 15px; display: flex; align-items: center; border-bottom: 1px solid var(--border-color); font-weight: 600; }
-  .preview-header .close-btn { margin-left: auto; background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; line-height: 1;}
-  .preview-content { flex: 1; }
-  iframe.preview { width: 100%; height: 100%; border: none; background: white; }
-  
-  /* --- RESPONSIVE --- */
-  @media (max-width: 768px) {
-    .sidebar { position: fixed; height: 100vh; z-index: 100; left: 48px; margin-left: -100%; }
-    .sidebar.visible { margin-left: 0; width: calc(100% - 48px); max-width: 300px; }
-    .status-bar { display: none; }
-  }
+/* preview overlay */
+#preview-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;padding:3vh 4vw;align-items:center;justify-content:center}
+#preview-overlay.active{display:flex}
+.preview-modal{width:100%;height:100%;background:var(--sidebar-bg);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+.preview-header{padding:8px 12px;display:flex;align-items:center;border-bottom:1px solid var(--border-color);font-weight:600}
+.preview-header .close-btn{margin-left:auto;background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer}
+.preview-content{flex:1}
+iframe.preview{width:100%;height:100%;border:none;background:white}
+
+/* small screens */
+@media (max-width:768px){
+  .sidebar{position:fixed;height:100vh;z-index:100;left:48px;margin-left:-100%}
+  .sidebar.visible{margin-left:0;width:calc(100% - 48px);max-width:340px}
+  .status-bar{display:none}
+}
+
+/* small cosmetic */
+.btn-primary{background:var(--accent-blue);color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer}
+.btn-ghost{background:transparent;color:var(--text-primary);border:1px solid rgba(255,255,255,0.04);padding:6px 10px;border-radius:4px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -120,38 +105,45 @@
 <div class="main-container">
   <aside class="activity-bar">
     <div class="actions-group">
-      <button id="activity-files" class="icon-btn active" title="Explorer"><i class="fa-solid fa-files"></i></button>
+      <button id="activity-files" class="icon-btn" title="Explorer"><i class="fa-solid fa-files"></i></button>
       <label for="folder-input" class="icon-btn" title="Import Folder"><i class="fa-solid fa-folder-plus"></i></label>
       <label for="zip-input" class="icon-btn" title="Import ZIP"><i class="fa-solid fa-file-zipper"></i></label>
       <button id="run-btn-activity" class="icon-btn" title="Run Preview"><i class="fa-solid fa-play"></i></button>
     </div>
     <div class="actions-group">
-        <button id="clear-btn" class="icon-btn" title="Clear All"><i class="fa-solid fa-trash"></i></button>
+      <button id="clear-btn" class="icon-btn" title="Clear All"><i class="fa-solid fa-trash"></i></button>
     </div>
   </aside>
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">Explorer</div>
-    <div class="file-tree" id="file-tree"></div>
+    <div class="file-tree" id="file-tree">(kosong)</div>
   </aside>
 
   <div class="workbench">
     <main class="editor-area">
       <div class="editor-tabs" id="editor-tabs"></div>
       <div class="editor-wrap">
-        <div class="cm-container" id="cm-container"><textarea id="code-editor"></textarea></div>
-        <div class="image-preview-area" id="image-preview-area"><img id="image-preview-img" src="" alt="Image Preview"/></div>
+        <div class="cm-container" id="cm-container">
+          <textarea id="code-editor"></textarea>
+        </div>
+        <div class="image-preview-area" id="image-preview-area">
+          <img id="image-preview-img" src="" alt="Image Preview"/>
+        </div>
       </div>
     </main>
+    <div class="status-bar">
+      <div class="status-info">Project: memory</div>
+      <div class="status-actions">
+        <button id="save-file" class="btn-ghost" title="Save file"><i class="fa-solid fa-save"></i> Save</button>
+        <input id="folder-input" type="file" webkitdirectory multiple hidden />
+        <input id="zip-input" type="file" accept=".zip" hidden />
+      </div>
+    </div>
   </div>
 </div>
 
-<footer class="status-bar">
-  <div class="status-item"><i class="fa-solid fa-code-branch"></i> main</div>
-  <div class="status-item"><button id="save-file" style="background:none;border:none;color:white;cursor:pointer;"><i class="fa-solid fa-save"></i> Save File</button></div>
-  <div class="status-item">UTF-8</div>
-</footer>
-
+<!-- Preview modal -->
 <div id="preview-overlay">
   <div class="preview-modal">
     <div class="preview-header"><span>Preview</span><button id="preview-close-btn" class="close-btn">&times;</button></div>
@@ -159,230 +151,332 @@
   </div>
 </div>
 
-<input id="folder-input" type="file" webkitdirectory multiple hidden />
-<input id="zip-input" type="file" accept=".zip" hidden />
-
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const ui = {
-        sidebar: document.getElementById('sidebar'),
-        activityFilesBtn: document.getElementById('activity-files'),
-        previewOverlay: document.getElementById('preview-overlay'),
-        previewCloseBtn: document.getElementById('preview-close-btn'),
-        editorTabsContainer: document.getElementById('editor-tabs'),
-        cmContainer: document.getElementById('cm-container'),
-        imagePreviewArea: document.getElementById('image-preview-area'),
-        imagePreviewImg: document.getElementById('image-preview-img'),
-        folderInput: document.getElementById('folder-input'),
-        zipInput: document.getElementById('zip-input'),
-        treeContainer: document.getElementById('file-tree'),
-        runBtn: document.getElementById('run-btn-activity'),
-        clearBtn: document.getElementById('clear-btn'),
-        previewIframe: document.getElementById('preview-iframe'),
-        saveFileBtn: document.getElementById('save-file'),
-    };
-    
-    const state = { files: {}, assetUrls: {}, currentPath: null };
-    const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
-        mode: 'xml', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true
+
+  if (typeof CodeMirror === 'undefined') { console.error('CodeMirror tidak ditemukan'); return; }
+  if (typeof JSZip === 'undefined') { console.error('JSZip tidak ditemukan'); return; }
+
+  const ui = {
+    sidebar: document.getElementById('sidebar'),
+    activityFilesBtn: document.getElementById('activity-files'),
+    previewOverlay: document.getElementById('preview-overlay'),
+    previewCloseBtn: document.getElementById('preview-close-btn'),
+    editorTabsContainer: document.getElementById('editor-tabs'),
+    cmContainer: document.getElementById('cm-container'),
+    imagePreviewArea: document.getElementById('image-preview-area'),
+    imagePreviewImg: document.getElementById('image-preview-img'),
+    folderInput: document.getElementById('folder-input'),
+    zipInput: document.getElementById('zip-input'),
+    treeContainer: document.getElementById('file-tree'),
+    runBtn: document.getElementById('run-btn-activity'),
+    clearBtn: document.getElementById('clear-btn'),
+    previewIframe: document.getElementById('preview-iframe'),
+    saveFileBtn: document.getElementById('save-file'),
+  };
+
+  const state = { files: {}, assetUrls: {}, currentPath: null };
+
+  const textarea = document.getElementById('code-editor');
+  const editor = CodeMirror.fromTextArea(textarea, {
+    mode: 'htmlmixed', theme: 'dracula', lineNumbers: true, autoCloseBrackets: true, viewportMargin: Infinity
+  });
+
+  function refreshEditorLater(delay = 50) { setTimeout(() => editor.refresh(), delay); }
+
+  const isBinaryFile = (name = '') => /\.(jpe?g|png|gif|svg|webp|ico|bmp)$/i.test(name);
+  const isCodeFile = (name = '') => /\.(html?|css|js)$/i.test(name);
+
+  function showEditor(show) {
+    ui.cmContainer.style.display = show ? 'block' : 'none';
+    ui.imagePreviewArea.classList.toggle('active', !show);
+    refreshEditorLater(60);
+  }
+
+  function renderTabs() {
+    ui.editorTabsContainer.innerHTML = '';
+    const codeFiles = Object.keys(state.files).filter(isCodeFile).sort();
+    if (codeFiles.length === 0) {
+      ui.editorTabsContainer.innerHTML = '<div style="padding:8px;color:var(--text-secondary)">No code files</div>';
+      return;
+    }
+    codeFiles.forEach(path => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = path.split('/').pop();
+      if (path === state.currentPath) btn.classList.add('active');
+      btn.onclick = () => openFile(path);
+      ui.editorTabsContainer.appendChild(btn);
     });
-    
-    ui.activityFilesBtn.onclick = () => {
-        if (window.innerWidth <= 768) ui.sidebar.classList.toggle('visible');
-        else ui.sidebar.classList.toggle('collapsed');
-    };
-    ui.previewCloseBtn.onclick = () => ui.previewOverlay.classList.remove('active');
+  }
 
-    const isBinaryFile = (name) => /\.(jpe?g|png|gif|svg|webp|ico)$/i.test(name);
-    const isCodeFile = (name) => /\.(html?|css|js)$/i.test(name);
-    
-    function showEditor(show) {
-        ui.cmContainer.style.display = show ? 'block' : 'none';
-        ui.imagePreviewArea.classList.toggle('active', !show);
+  async function openFile(path) {
+    if (!state.files[path]) return;
+    state.currentPath = path;
+    const fileData = state.files[path];
+    renderTree();
+    renderTabs();
+
+    if (fileData.isBinary) {
+      showEditor(false);
+      ui.imagePreviewImg.src = state.assetUrls[path] || '';
+      return;
     }
 
-    // --- PERUBAHAN DI SINI: Hanya render tab untuk file kode ---
-    function renderTabs() {
-        ui.editorTabsContainer.innerHTML = '';
-        const codeFiles = Object.keys(state.files).filter(isCodeFile).sort();
-        
-        if (codeFiles.length === 0) {
-            ui.editorTabsContainer.innerHTML = '<button class="btn active">Welcome</button>';
-            return;
-        }
-        codeFiles.forEach(path => {
-            const btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.innerHTML = `<i class="fa-regular fa-file-code" style="margin-right: 8px;"></i> ${path.split('/').pop()}`;
-            btn.title = path;
-            if (path === state.currentPath) btn.classList.add('active');
-            btn.onclick = () => openFile(path);
-            ui.editorTabsContainer.appendChild(btn);
-        });
-    }
+    showEditor(true);
 
-    function openFile(path) {
-        if (!state.files[path]) return;
-        state.currentPath = path;
-        const fileData = state.files[path];
-        if (isBinaryFile(path)) {
-            showEditor(false);
-            ui.imagePreviewImg.src = state.assetUrls[path];
+    let text = fileData.text;
+    if (text === undefined) {
+      try {
+        if (fileData.file && typeof fileData.file.text === 'function') {
+          text = await fileData.file.text();
         } else {
-            showEditor(true);
-            const showText = (text) => {
-                fileData.text = text;
-                const mode = path.match(/\.css$/i) ? 'css' : (path.match(/\.js$/i) ? 'javascript' : 'xml');
-                editor.setOption('mode', mode);
-                editor.setValue(text || '');
-                setTimeout(() => editor.refresh(), 1);
-            };
-            if (fileData.text === undefined) { fileData.file.text().then(showText); } 
-            else { showText(fileData.text); }
+          text = fileData.text ?? '';
         }
-        renderTree();
-        renderTabs();
+      } catch (e) {
+        console.error('Gagal baca file', e);
+        text = '';
+      }
     }
-    
-    function renderTree() {
-        ui.treeContainer.innerHTML = '';
-        if (Object.keys(state.files).length === 0) {
-            ui.treeContainer.innerHTML = '<div style="padding: 10px; color: var(--text-secondary);">(kosong)</div>';
-            return;
-        }
-        const fileTree = {};
-        for (const path in state.files) {
-            let currentLevel = fileTree;
-            const parts = path.split('/');
-            parts.forEach((part, index) => {
-                const isFile = index === parts.length - 1;
-                if (!currentLevel[part]) {
-                    currentLevel[part] = isFile ? { type: 'file', path: path } : { type: 'folder', children: {} };
-                }
-                currentLevel = currentLevel[part].children;
-            });
-        }
-        const rootUl = document.createElement('ul');
-        createDOMTree(fileTree, rootUl);
-        ui.treeContainer.appendChild(rootUl);
+    fileData.text = text;
+
+    const mode = path.match(/\.css$/i) ? 'css' : (path.match(/\.js$/i) ? 'javascript' : 'htmlmixed');
+    editor.setOption('mode', mode);
+    editor.setValue(text || '');
+    refreshEditorLater(30);
+  }
+
+  function renderTree() {
+    ui.treeContainer.innerHTML = '';
+    const keys = Object.keys(state.files);
+    if (keys.length === 0) {
+      ui.treeContainer.innerHTML = '<div style="padding:10px;color:var(--text-secondary)">(kosong)</div>';
+      return;
     }
-    
-    function createDOMTree(node, parentElement) {
-        const sortedKeys = Object.keys(node).sort((a, b) => {
-            const nodeA = node[a]; const nodeB = node[b];
-            if (nodeA.type === nodeB.type) return a.localeCompare(b);
-            return nodeA.type === 'folder' ? -1 : 1;
-        });
-        for (const key of sortedKeys) {
-            const childNode = node[key];
-            const li = document.createElement('li');
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'tree-item';
-            if (childNode.type === 'folder') {
-                itemDiv.innerHTML = `<span class="folder-toggle"><i class="fa-solid fa-chevron-right"></i></span> <i class="fa-regular fa-folder" style="color: var(--accent-blue)"></i> ${key}`;
-                const childrenUl = document.createElement('ul');
-                childrenUl.className = 'nested collapsed';
-                li.appendChild(itemDiv); li.appendChild(childrenUl);
-                itemDiv.onclick = (e) => {
-                    e.stopPropagation();
-                    childrenUl.classList.toggle('collapsed');
-                    itemDiv.querySelector('.folder-toggle').classList.toggle('expanded');
-                };
-                createDOMTree(childNode.children, childrenUl);
-            } else {
-                if (state.currentPath === childNode.path) itemDiv.classList.add('active');
-                const iconClass = isBinaryFile(childNode.path) ? 'fa-regular fa-image' : 'fa-regular fa-file-lines';
-                itemDiv.innerHTML = `<i class="${iconClass}" style="color: var(--text-secondary); margin-left: 12px;"></i> ${key}`;
-                itemDiv.onclick = () => openFile(childNode.path);
-                li.appendChild(itemDiv);
-            }
-            parentElement.appendChild(li);
+    const tree = {};
+    for (const path of keys) {
+      let current = tree;
+      const parts = path.split('/');
+      parts.forEach((part, idx) => {
+        const isFile = idx === parts.length - 1;
+        if (!current[part]) {
+          current[part] = isFile ? { type: 'file', path } : { type: 'folder', children: {} };
         }
+        if (!isFile) current = current[part].children;
+      });
+    }
+    const rootUl = document.createElement('ul');
+    createDOMTree(tree, rootUl);
+    ui.treeContainer.appendChild(rootUl);
+  }
+
+  function createDOMTree(node, parentEl) {
+    const keys = Object.keys(node).sort((a, b) => {
+      const A = node[a], B = node[b];
+      if (A.type === B.type) return a.localeCompare(b);
+      return A.type === 'folder' ? -1 : 1;
+    });
+    for (const k of keys) {
+      const child = node[k];
+      const li = document.createElement('li');
+      const item = document.createElement('div');
+      item.className = 'tree-item';
+      if (child.type === 'folder') {
+        item.innerHTML = `<span class="folder-toggle"><i class="fa-solid fa-chevron-right"></i></span> <i class="fa-regular fa-folder" style="color:var(--accent-blue)"></i> ${k}`;
+        const childrenUl = document.createElement('ul');
+        childrenUl.className = 'nested collapsed';
+        li.appendChild(item);
+        li.appendChild(childrenUl);
+        item.onclick = (e) => {
+          e.stopPropagation();
+          childrenUl.classList.toggle('collapsed');
+          const ft = item.querySelector('.folder-toggle');
+          if (ft) ft.classList.toggle('expanded');
+        };
+        createDOMTree(child.children, childrenUl);
+      } else {
+        if (state.currentPath === child.path) item.classList.add('active');
+        const icon = isBinaryFile(child.path) ? 'fa-regular fa-image' : 'fa-regular fa-file-lines';
+        item.innerHTML = `<i class="${icon}" style="color:var(--text-secondary);margin-left:6px"></i> ${k}`;
+        item.onclick = () => openFile(child.path);
+        li.appendChild(item);
+      }
+      parentEl.appendChild(li);
+    }
+  }
+
+  function clearAll() {
+    if (!confirm('Hapus semua file di memori?')) return;
+    Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
+    state.files = {};
+    state.assetUrls = {};
+    state.currentPath = null;
+    editor.setValue('// Editor siap.');
+    showEditor(true);
+    renderTree();
+    renderTabs();
+    initDefaultFiles();
+  }
+
+  async function processFiles(fileList) {
+  for (const file of fileList) {
+    const relative = file.webkitRelativePath || file.name;
+    const bin = isBinaryFile(relative);
+
+    if (bin) {
+      if (state.assetUrls[relative]) URL.revokeObjectURL(state.assetUrls[relative]);
+      state.assetUrls[relative] = URL.createObjectURL(file);
     }
 
-    function clearAll() {
-        if (!confirm('Hapus semua file yang ada di memori?')) return;
-        Object.values(state.assetUrls).forEach(URL.revokeObjectURL);
-        state.assetUrls = {}; state.files = {}; state.currentPath = null;
-        editor.setValue('// Editor siap.'); showEditor(true);
-        renderTree(); renderTabs();
-    }
-    ui.clearBtn.onclick = clearAll;
+    // Reset text ke undefined supaya konten baru terbaca ulang
+    state.files[relative] = { file, text: undefined, isBinary: bin };
+  }
 
-    async function processFiles(fileList) {
-        clearAll();
-        for (const file of fileList) {
-            const relative = file.webkitRelativePath || file.name;
-            const isBin = isBinaryFile(relative);
-            state.files[relative] = { file, isBinary: isBin };
-            if (isBin) state.assetUrls[relative] = URL.createObjectURL(file);
-        }
-        renderTree(); renderTabs();
-        const htmlKey = Object.keys(state.files).find(k => /index\.html?$/i.test(k));
-        if (htmlKey) openFile(htmlKey);
-    }
-    ui.folderInput.addEventListener('change', (e) => processFiles(Array.from(e.target.files)));
-    ui.zipInput.addEventListener('change', async (e) => {
-        const f = e.target.files[0]; if (!f) return;
-        try {
-            clearAll();
-            const jszip = await JSZip.loadAsync(f);
-            const promises = [];
-            jszip.forEach((relPath, entry) => {
-                if (entry.dir) return;
-                const p = (async () => {
-                    const blob = await entry.async('blob');
-                    const fileObj = new File([blob], relPath.split('/').pop(), { type: blob.type });
-                    const isBin = isBinaryFile(relPath);
-                    state.files[relPath] = { file: fileObj, isBinary: isBin };
-                    if (isBin) state.assetUrls[relPath] = URL.createObjectURL(blob);
-                })();
-                promises.push(p);
-            });
-            await Promise.all(promises);
-            renderTree(); renderTabs();
-            const htmlKey = Object.keys(state.files).find(k => /index\.html?$/i.test(k));
-            if (htmlKey) openFile(htmlKey);
-        } catch (err) { console.error('ZIP error', err); alert('Gagal memproses zip'); }
+  ['index.html', 'style.css', 'script.js'].forEach(f => {
+    if (!state.files[f]) state.files[f] = { text: '', isBinary: false };
+  });
+
+  const lastFile = fileList[fileList.length - 1];
+  const lastFilePath = lastFile.webkitRelativePath || lastFile.name;
+  state.currentPath = lastFilePath;
+
+  renderTree();
+  renderTabs();
+  await openFile(state.currentPath);
+}
+
+async function loadZip(file) {
+  try {
+    const zip = await JSZip.loadAsync(file);
+    const filesInZip = [];
+    zip.forEach((relativePath, zipEntry) => {
+      if (!zipEntry.dir) filesInZip.push(zipEntry);
     });
 
-    ui.saveFileBtn.addEventListener('click', () => {
-        if (!state.currentPath || !state.files[state.currentPath] || isBinaryFile(state.currentPath)) return;
-        state.files[state.currentPath].text = editor.getValue();
-        alert('Tersimpan (di memori).');
-    });
+    for (const zipEntry of filesInZip) {
+      const content = await zipEntry.async('blob');
+      const fileObj = new File([content], zipEntry.name);
+      const relative = zipEntry.name;
+      const bin = isBinaryFile(relative);
 
-    async function buildPreviewSource() {
-        let html = '<h1>Project Kosong</h1>', css = '', js = '';
-        const findKey = (regex) => Object.keys(state.files).find(k => regex.test(k) && !isBinaryFile(k));
-        const readFile = async (key) => state.files[key] ? (state.files[key].text ?? await state.files[key].file.text()) : '';
-        
-        const htmlKey = findKey(/index\.html?$/i); if(htmlKey) html = await readFile(htmlKey);
-        const cssKey = findKey(/style\.css$/i); if(cssKey) css = await readFile(cssKey);
-        const jsKey = findKey(/script\.js$/i); if(jsKey) js = await readFile(jsKey);
-        let processedHtml = html;
-        for (const [path, url] of Object.entries(state.assetUrls)) {
-            processedHtml = processedHtml.replaceAll(path, url);
-        }
-        return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><style>${css}</style></head><body>${processedHtml}<script>${js}<\/script></body></html>`;
+      if (bin) {
+        if (state.assetUrls[relative]) URL.revokeObjectURL(state.assetUrls[relative]);
+        state.assetUrls[relative] = URL.createObjectURL(fileObj);
+      }
+
+      // Reset text ke undefined supaya konten baru terbaca ulang
+      state.files[relative] = { file: fileObj, text: undefined, isBinary: bin };
     }
 
-    ui.runBtn.addEventListener('click', async () => {
-        try {
-            ui.previewIframe.srcdoc = await buildPreviewSource();
-            ui.previewOverlay.classList.add('active');
-        } catch (e) { console.error('Preview error', e); }
+    ['index.html', 'style.css', 'script.js'].forEach(f => {
+      if (!state.files[f]) state.files[f] = { text: '', isBinary: false };
     });
-    
-    renderTree(); renderTabs();
-    window.addEventListener('beforeunload', () => Object.values(state.assetUrls).forEach(URL.revokeObjectURL));
+
+    if (filesInZip.length) {
+      state.currentPath = filesInZip[filesInZip.length - 1].name;
+    } else if (state.files['index.html']) {
+      state.currentPath = 'index.html';
+    } else {
+      state.currentPath = Object.keys(state.files)[0];
+    }
+
+    renderTree();
+    renderTabs();
+    await openFile(state.currentPath);
+  } catch (e) {
+    alert('Gagal membuka file ZIP: ' + e.message);
+  }
+}
+
+  function initDefaultFiles() {
+    ['index.html', 'style.css', 'script.js'].forEach(f => {
+      if (!state.files[f]) state.files[f] = { text: '', isBinary: false };
+    });
+    if (!state.currentPath) state.currentPath = 'index.html';
+  }
+
+  // Simpan isi editor ke state saat berubah
+  editor.on('change', () => {
+    if (state.currentPath && state.files[state.currentPath] && !state.files[state.currentPath].isBinary) {
+      state.files[state.currentPath].text = editor.getValue();
+    }
+  });
+
+  // Event UI
+  ui.activityFilesBtn.onclick = () => {
+    if (ui.sidebar.classList.contains('collapsed')) {
+      ui.sidebar.classList.remove('collapsed');
+    } else {
+      ui.sidebar.classList.add('collapsed');
+    }
+  };
+
+  ui.folderInput.onchange = async e => {
+    if (e.target.files.length === 0) return;
+    await processFiles(e.target.files);
+    ui.folderInput.value = '';
+    if (ui.sidebar.classList.contains('collapsed')) ui.sidebar.classList.remove('collapsed');
+  };
+
+  ui.zipInput.onchange = async e => {
+    if (e.target.files.length === 0) return;
+    await loadZip(e.target.files[0]);
+    ui.zipInput.value = '';
+    if (ui.sidebar.classList.contains('collapsed')) ui.sidebar.classList.remove('collapsed');
+  };
+
+  ui.clearBtn.onclick = clearAll;
+
+  ui.runBtn.onclick = () => {
+    if (!state.currentPath) return alert('Tidak ada file untuk preview.');
+    if (isBinaryFile(state.currentPath)) return alert('Tidak bisa preview file binary.');
+    const html = editor.getValue();
+    const blob = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    ui.previewIframe.src = url;
+    ui.previewOverlay.classList.add('active');
+  };
+
+  ui.previewCloseBtn.onclick = () => {
+    ui.previewOverlay.classList.remove('active');
+    if (ui.previewIframe.src) {
+      URL.revokeObjectURL(ui.previewIframe.src);
+      ui.previewIframe.src = '';
+    }
+  };
+
+  ui.saveFileBtn.onclick = () => {
+    if (!state.currentPath) return alert('Tidak ada file yang aktif.');
+    const fileData = state.files[state.currentPath];
+    if (fileData.isBinary) return alert('Tidak bisa simpan file binary.');
+    const content = editor.getValue();
+    const blob = new Blob([content], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = state.currentPath.split('/').pop();
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  // Init
+  initDefaultFiles();
+  renderTree();
+  renderTabs();
+  openFile(state.currentPath);
+
+  // Refresh editor sedikit setelah render
+  setTimeout(() => editor.refresh(), 100);
+
 });
 </script>
+
 </body>
 </html>
