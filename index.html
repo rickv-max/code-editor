@@ -259,22 +259,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function runPreview() {
     if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) return alert('Tidak ada index.html');
+
     const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
     let html = state.files[indexKey].text || '';
+
+    // =====================================================================
+    // === TAMBAHAN PENTING UNTUK MEMPERBAIKI GAMBAR RUSAK ADA DI SINI ===
+    // Loop melalui semua aset (gambar, dll) yang URL sementaranya sudah dibuat
+    Object.keys(state.assetUrls).forEach(assetPath => {
+        const assetUrl = state.assetUrls[assetPath]; // ini adalah Blob URL, contoh: blob:http://...
+        
+        // Buat Regex untuk mencari path file (contoh: "logo.png" atau "./images/logo.png")
+        // dan menggantinya dengan Blob URL yang valid.
+        const regex = new RegExp(`(src|href)=["'](./)?${assetPath}["']`, 'g');
+        html = html.replace(regex, `$1="${assetUrl}"`);
+    });
+    // =====================================================================
+
     const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
-    const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
     if (styleKey && state.files[styleKey]?.text) {
-      html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
+        html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
     }
+
+    const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
     if (scriptKey && state.files[scriptKey]?.text) {
-      html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
+        html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
     }
+
+    // Buat Blob dari HTML yang sudah final
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
+
     ui.previewIframe.src = url;
     ui.previewOverlay.classList.add('active');
-    ui.previewIframe.onload = () => URL.revokeObjectURL(url);
-  }
+
+    // JANGAN hapus URL saat onload. Hapus saat preview ditutup.
+    // ui.previewIframe.onload = () => URL.revokeObjectURL(url); // <-- Baris ini dihapus/dinonaktifkan
+}
 
   async function processFiles(fileList) {
     clearAll();
@@ -545,9 +566,13 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('File saved ke memori (session).');
     }
   };
-  ui.previewCloseBtn.onclick = () => ui.previewOverlay.classList.remove('active');
-  bindRunBtn();
-
+  // Ganti baris ini di kode Anda
+ui.previewCloseBtn.onclick = () => {
+    ui.previewOverlay.classList.remove('active');
+    // BARU: Hapus Blob URL dari iframe setelah ditutup untuk membebaskan memori
+    URL.revokeObjectURL(ui.previewIframe.src); 
+    ui.previewIframe.src = 'about:blank'; // Reset iframe
+};
   // Init default files and open index
   state.files['index.html']={text:'<!doctype html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <title>Index</title>\n</head>\n<body>\n  <h1>Halo</h1>\n</body>\n</html>',isBinary:false,file:null};
   state.files['style.css']={text:'/* style.css */\nbody{font-family:Arial}',isBinary:false,file:null};
