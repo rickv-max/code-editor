@@ -257,49 +257,56 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.runBtn.onclick = runPreview;
   }
 
-  // GANTI FUNGSI LAMA DENGAN INI
+   // GANTI SELURUH FUNGSI runPreview LAMA ANDA DENGAN YANG INI
 function runPreview() {
-    const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
-    if (!indexKey) {
-        return alert('File index.html tidak ditemukan untuk dijalankan.');
+    if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) {
+        return alert('Tidak ada file index.html ditemukan untuk dijalankan.');
     }
 
+    const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
     let html = state.files[indexKey].text || '';
 
-    // Membuat URL basis dari lokasi index.html. Ini adalah kunci utamanya.
-    // Ini memungkinkan kita menyelesaikan path seperti "../images/pic.jpg" dengan benar.
-    const baseUrl = new URL(indexKey, 'http://dummybase.com/');
+    // 1. Dapatkan lokasi (path) dari file index.html sebagai basis.
+    // Contoh: jika indexKey adalah "my-project/public/index.html",
+    // maka baseUrl akan menjadi "http://dummy.com/my-project/public/index.html".
+    // Kita menggunakan "http://dummy.com" sebagai basis palsu agar bisa memakai URL API.
+    const baseUrl = new URL(indexKey, 'http://dummy.com/');
 
+    // Fungsi ini akan dipanggil untuk setiap atribut src="..." atau href="..." yang ditemukan
     const pathReplacer = (match, attribute, pathValue) => {
-        // Jangan proses link absolut, link data, atau path kosong
-        if (!pathValue || pathValue.startsWith('http') || pathValue.startsWith('data:')) {
-            return match;
+        // Abaikan link absolut (http, https), link ke data, atau link kosong
+        if (!pathValue || pathValue.startsWith('http') || pathValue.startsWith('data:') || pathValue.startsWith('//')) {
+            return match; // Kembalikan seperti aslinya
         }
 
-        // Gunakan URL API browser untuk menyelesaikan path relatif secara akurat
+        // 2. Gunakan URL API untuk menyelesaikan path relatif, sama seperti cara kerja browser.
+        // Contoh: jika baseUrl adalah ".../public/index.html" dan pathValue adalah "../images/logo.png",
+        // maka `resolvedUrl.pathname` akan menjadi "/my-project/images/logo.png".
         const resolvedUrl = new URL(pathValue, baseUrl);
         
-        // Dapatkan path bersih (tanpa garis miring di awal) untuk dicocokkan dengan kunci di state
+        // 3. Dapatkan path lengkap yang bersih (tanpa garis miring di awal)
         const fullPath = resolvedUrl.pathname.substring(1);
 
-        // Periksa apakah path yang sudah diselesaikan ini ada di daftar aset kita
+        // 4. Periksa apakah path lengkap ini ada di daftar aset kita.
         if (state.assetUrls[fullPath]) {
-            // Jika ada, ganti dengan Blob URL
-            return `${attribute}="${state.assetUrls[fullPath]}"`;
-        } else {
-            // Jika tidak ada, biarkan seperti aslinya
-            return match;
+            const blobUrl = state.assetUrls[fullPath];
+            // 5. Ganti path lama dengan Blob URL yang valid.
+            return `${attribute}="${blobUrl}"`;
         }
+        
+        // Jika tidak ditemukan di aset, jangan ubah apa pun.
+        return match;
     };
 
-    // Ganti semua src dan href menggunakan logika di atas
+    // 6. Jalankan Regex untuk menemukan SEMUA atribut src dan href, lalu ganti menggunakan fungsi di atas.
     html = html.replace(/(src|href)=["']([^"']+)["']/g, pathReplacer);
 
-    // Proses sisipan CSS & JS internal (jika ada, tidak wajib)
+    // Sisipkan CSS dan JS internal (jika ada) - logika ini tetap sama
     const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
     if (styleKey && state.files[styleKey]?.text) {
         html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
     }
+
     const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
     if (scriptKey && state.files[scriptKey]?.text) {
         html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
@@ -307,48 +314,43 @@ function runPreview() {
 
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
+
     ui.previewIframe.src = url;
     ui.previewOverlay.classList.add('active');
 }
 
-  // GANTI FUNGSI LAMA DENGAN INI
-async function processFiles(fileList) {
+  async function processFiles(fileList) {
     clearAll();
     for (const file of fileList) {
-        // Mendapatkan path relatif yang konsisten
-        const name = file.webkitRelativePath || file.name;
-        if (!name) continue; // Lewati jika path tidak valid
-
-        const binary = isBinaryFile(name);
-        if (binary) {
-            state.assetUrls[name] = URL.createObjectURL(file);
-            state.files[name] = { file: file, text: undefined, isBinary: true };
-        } else {
-            state.files[name] = { file: file, text: await file.text(), isBinary: false };
-        }
+      const name = file.webkitRelativePath || file.name;
+      const binary = isBinaryFile(name);
+      state.files[name] = { file, text: binary ? undefined : await file.text(), isBinary: binary };
+      if (binary) state.assetUrls[name] = URL.createObjectURL(file);
     }
     ensureDefaultFiles();
     const firstCode = Object.keys(state.files).filter(isCodeFile)[0];
     await openFile(firstCode);
     bindRunBtn();
     renderTree();
-}
+  }
 
-  // GANTI FUNGSI LAMA DENGAN INI
-async function importZip(file) {
+  async function importZip(file) {
     clearAll();
     const zip = await JSZip.loadAsync(file);
     for (const name of Object.keys(zip.files)) {
-        const zipEntry = zip.files[name];
-        if (zipEntry.dir) continue; // Lewati direktori
+        if (zip.files[name].dir) continue; // Lewati folder
 
-        const binary = isBinaryFile(name);
-        if (binary) {
-            const blob = await zipEntry.async('blob');
+        // Gunakan fungsi isBinaryFile untuk memeriksa tipe file
+        if (isBinaryFile(name)) {
+            // Proses sebagai file gambar (binary)
+            // PERHATIKAN PENGGUNAAN KUTIP LURUS YANG BENAR: 'blob'
+            const blob = await zip.files[name].async('blob'); 
             state.assetUrls[name] = URL.createObjectURL(blob);
             state.files[name] = { file: null, text: undefined, isBinary: true };
         } else {
-            const text = await zipEntry.async('text');
+            // Proses sebagai file teks (html, css, js, dll)
+            // PERHATIKAN PENGGUNAAN KUTIP LURUS YANG BENAR: 'text'
+            const text = await zip.files[name].async('text');
             state.files[name] = { file: null, text: text, isBinary: false };
         }
     }
@@ -357,7 +359,7 @@ async function importZip(file) {
     await openFile(firstCode);
     bindRunBtn();
     renderTree();
-}
+  }
 
   function ensureDefaultFiles(){
     ['index.html','style.css','script.js'].forEach(f => {
