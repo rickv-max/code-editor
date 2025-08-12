@@ -257,59 +257,62 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.runBtn.onclick = runPreview;
   }
 
-   // INI ADALAH KODE ANDA YANG DIPERBAIKI. GANTI HANYA FUNGSI runPreview DENGAN INI.
+   // GANTI HANYA FUNGSI runPreview ANDA DENGAN VERSI FINAL INI.
 function runPreview() {
-    if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) {
-        return alert('Tidak ada file index.html ditemukan untuk dijalankan.');
+    const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
+    if (!indexKey) {
+        return alert('File index.html tidak ditemukan untuk dijalankan.');
     }
 
-    const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
     let html = state.files[indexKey].text || '';
-    
-    const baseUrl = new URL(indexKey, 'http://dummy.com/');
 
     const pathReplacer = (match, attribute, pathValue) => {
+        // Abaikan link absolut, link data, atau path kosong
         if (!pathValue || pathValue.startsWith('http') || pathValue.startsWith('data:') || pathValue.startsWith('//')) {
             return match;
         }
 
-        let foundKey = null;
+        // Membersihkan path dari HTML, menghapus './' di awal jika ada.
+        // Contoh: "./assets/images/logo.jpg" menjadi "assets/images/logo.jpg"
+        const cleanPathValue = pathValue.replace(/^\.\//, '');
+        
+        let matchedAssetKey = null;
 
-        // === STRATEGI 1: Metode Cerdas (Kode Anda yang hampir berhasil) ===
-        const resolvedUrl = new URL(pathValue, baseUrl);
-        const fullPath = resolvedUrl.pathname.substring(1);
-        if (state.assetUrls[fullPath]) {
-            foundKey = fullPath;
-        }
-
-        // === STRATEGI 2: Rencana Cadangan (Jika cara 1 gagal) ===
-        // Ini akan mencari path yang bagian akhirnya sama persis.
-        if (!foundKey) {
-            const cleanPathValue = pathValue.replace(/^\.\//, ''); // Bersihkan ./ dari awal
-            for (const assetKey in state.assetUrls) {
-                if (assetKey.endsWith('/' + cleanPathValue) || assetKey === cleanPathValue) {
-                    foundKey = assetKey;
-                    break; 
+        // Loop melalui semua aset gambar yang kita miliki
+        for (const assetKey in state.assetUrls) {
+            
+            // === INI ADALAH LOGIKA KUNCI YANG DIPERBAIKI ===
+            // Apakah path aset LENGKAP (misal: "nama-project/assets/images/logo.jpg")
+            // diakhiri dengan path dari HTML (misal: "assets/images/logo.jpg")?
+            if (assetKey.endsWith(cleanPathValue)) {
+                
+                // Ini adalah pemeriksaan keamanan untuk menghindari salah cocok.
+                // Contoh: 'myphoto.jpg' tidak akan salah cocok dengan 'anotherphoto.jpg'
+                const precedingCharIndex = assetKey.length - cleanPathValue.length - 1;
+                if (precedingCharIndex < 0 || assetKey[precedingCharIndex] === '/') {
+                    matchedAssetKey = assetKey;
+                    break; // Jodoh ditemukan, hentikan pencarian!
                 }
             }
         }
-        
-        // --- Hasil Akhir ---
-        if (foundKey) {
-            return `${attribute}="${state.assetUrls[foundKey]}"`;
+
+        if (matchedAssetKey) {
+            // Jika jodoh ditemukan, ganti path dengan Blob URL yang benar
+            return `${attribute}="${state.assetUrls[matchedAssetKey]}"`;
         }
         
+        // Jika tidak ada jodoh, kembalikan seperti aslinya
         return match;
     };
 
+    // Jalankan penggantian pada seluruh dokumen HTML
     html = html.replace(/(src|href)=["']([^"']+)["']/g, pathReplacer);
 
-    // ... sisa kode Anda tidak perlu diubah ...
+    // Bagian sisipan CSS/JS tetap sama
     const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
     if (styleKey && state.files[styleKey]?.text) {
         html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
     }
-
     const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
     if (scriptKey && state.files[scriptKey]?.text) {
         html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
@@ -317,7 +320,6 @@ function runPreview() {
 
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
-
     ui.previewIframe.src = url;
     ui.previewOverlay.classList.add('active');
 }
