@@ -118,6 +118,8 @@ iframe.preview{width:100%;height:100%;border:none;background:white}
 @media (max-width:768px){
   .sidebar{position:fixed;height:100vh;z-index:100;left:48px;margin-left:-100%}
   .sidebar.visible{margin-left:0;width:calc(100% - 48px);max-width:340px}
+  .sidebar.collapsed {
+    margin-left: -100%;}
   .status-bar{display:none}
 }
 .btn-primary{background:var(--accent-blue);color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer}
