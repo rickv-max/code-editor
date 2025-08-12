@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.runBtn.onclick = runPreview;
   }
 
-  // GANTI SELURUH FUNGSI runPreview LAMA ANDA DENGAN YANG INI
+  // GANTI SELURUH FUNGSI runPreview DENGAN VERSI FINAL INI
 function runPreview() {
     if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) {
         return alert('Tidak ada file index.html ditemukan untuk dijalankan.');
@@ -266,55 +266,60 @@ function runPreview() {
     const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
     let html = state.files[indexKey].text || '';
 
-    // 1. Dapatkan lokasi (path) dari file index.html sebagai basis.
-    // Contoh: jika indexKey adalah "my-project/public/index.html",
-    // maka baseUrl akan menjadi "http://dummy.com/my-project/public/index.html".
-    // Kita menggunakan "http://dummy.com" sebagai basis palsu agar bisa memakai URL API.
-    const baseUrl = new URL(indexKey, 'http://dummy.com/');
+    const regex = /(src|href)=["']([^"']+)["']/g;
 
-    // Fungsi ini akan dipanggil untuk setiap atribut src="..." atau href="..." yang ditemukan
     const pathReplacer = (match, attribute, pathValue) => {
-        // Abaikan link absolut (http, https), link ke data, atau link kosong
         if (!pathValue || pathValue.startsWith('http') || pathValue.startsWith('data:') || pathValue.startsWith('//')) {
-            return match; // Kembalikan seperti aslinya
+            return match;
         }
 
-        // 2. Gunakan URL API untuk menyelesaikan path relatif, sama seperti cara kerja browser.
-        // Contoh: jika baseUrl adalah ".../public/index.html" dan pathValue adalah "../images/logo.png",
-        // maka `resolvedUrl.pathname` akan menjadi "/my-project/images/logo.png".
-        const resolvedUrl = new URL(pathValue, baseUrl);
+        // Membersihkan path dari HTML, menghapus ./ di awal jika ada
+        const cleanPathValue = pathValue.startsWith('./') ? pathValue.substring(2) : pathValue;
         
-        // 3. Dapatkan path lengkap yang bersih (tanpa garis miring di awal)
-        const fullPath = resolvedUrl.pathname.substring(1);
+        let foundKey = null;
 
-        // 4. Periksa apakah path lengkap ini ada di daftar aset kita.
-        if (state.assetUrls[fullPath]) {
-            const blobUrl = state.assetUrls[fullPath];
-            // 5. Ganti path lama dengan Blob URL yang valid.
+        // =========================================================================
+        // === LOGIKA PENCARIAN BARU YANG LEBIH CERDAS ===
+        // 1. Coba cari kecocokan persis terlebih dahulu
+        if (state.assetUrls[cleanPathValue]) {
+            foundKey = cleanPathValue;
+        } 
+        // 2. Jika tidak ada, cari path yang bagian akhirnya cocok persis
+        else {
+            for (const assetKey in state.assetUrls) {
+                // Buat pencocokan yang lebih ketat: harus diakhiri dengan path dan didahului oleh '/'
+                if (assetKey.endsWith('/' + cleanPathValue)) {
+                    foundKey = assetKey;
+                    break;
+                }
+                // Atau cocok persis (untuk file di root)
+                if (assetKey === cleanPathValue) {
+                   foundKey = assetKey;
+                   break;
+                }
+            }
+        }
+        // =========================================================================
+        
+        if (foundKey) {
+            const blobUrl = state.assetUrls[foundKey];
+            console.log(`COCOK: Path HTML "${pathValue}" ditemukan sebagai aset "${foundKey}". Diganti dengan Blob URL.`);
             return `${attribute}="${blobUrl}"`;
+        } else {
+            console.warn(`GAGAL: Path HTML "${pathValue}" tidak dapat ditemukan di antara aset yang tersedia.`);
+            return match;
         }
-        
-        // Jika tidak ditemukan di aset, jangan ubah apa pun.
-        return match;
     };
+    
+    // Sebelum mengganti, hapus console lama dan beri judul
+    console.clear();
+    console.log("%c--- LAPORAN PROSES PREVIEW ---", "color: blue; font-size: 14px;");
 
-    // 6. Jalankan Regex untuk menemukan SEMUA atribut src dan href, lalu ganti menggunakan fungsi di atas.
-    html = html.replace(/(src|href)=["']([^"']+)["']/g, pathReplacer);
+    html = html.replace(regex, pathReplacer);
 
-    // Sisipkan CSS dan JS internal (jika ada) - logika ini tetap sama
-    const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
-    if (styleKey && state.files[styleKey]?.text) {
-        html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
-    }
-
-    const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
-    if (scriptKey && state.files[scriptKey]?.text) {
-        html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
-    }
-
+    // ... sisa kode tidak berubah ...
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
-
     ui.previewIframe.src = url;
     ui.previewOverlay.classList.add('active');
 }
