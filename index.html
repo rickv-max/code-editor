@@ -257,25 +257,51 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.runBtn.onclick = runPreview;
   }
 
-  function runPreview() {
-    if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) return alert('Tidak ada index.html');
+  // GANTI SELURUH FUNGSI runPreview LAMA ANDA DENGAN YANG INI
+function runPreview() {
+    if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) {
+        return alert('Tidak ada file index.html ditemukan untuk dijalankan.');
+    }
 
     const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
     let html = state.files[indexKey].text || '';
 
-    // =====================================================================
-    // === TAMBAHAN PENTING UNTUK MEMPERBAIKI GAMBAR RUSAK ADA DI SINI ===
-    // Loop melalui semua aset (gambar, dll) yang URL sementaranya sudah dibuat
-    Object.keys(state.assetUrls).forEach(assetPath => {
-        const assetUrl = state.assetUrls[assetPath]; // ini adalah Blob URL, contoh: blob:http://...
-        
-        // Buat Regex untuk mencari path file (contoh: "logo.png" atau "./images/logo.png")
-        // dan menggantinya dengan Blob URL yang valid.
-        const regex = new RegExp(`(src|href)=["'](./)?${assetPath}["']`, 'g');
-        html = html.replace(regex, `$1="${assetUrl}"`);
-    });
-    // =====================================================================
+    // 1. Dapatkan lokasi (path) dari file index.html sebagai basis.
+    // Contoh: jika indexKey adalah "my-project/public/index.html",
+    // maka baseUrl akan menjadi "http://dummy.com/my-project/public/index.html".
+    // Kita menggunakan "http://dummy.com" sebagai basis palsu agar bisa memakai URL API.
+    const baseUrl = new URL(indexKey, 'http://dummy.com/');
 
+    // Fungsi ini akan dipanggil untuk setiap atribut src="..." atau href="..." yang ditemukan
+    const pathReplacer = (match, attribute, pathValue) => {
+        // Abaikan link absolut (http, https), link ke data, atau link kosong
+        if (!pathValue || pathValue.startsWith('http') || pathValue.startsWith('data:') || pathValue.startsWith('//')) {
+            return match; // Kembalikan seperti aslinya
+        }
+
+        // 2. Gunakan URL API untuk menyelesaikan path relatif, sama seperti cara kerja browser.
+        // Contoh: jika baseUrl adalah ".../public/index.html" dan pathValue adalah "../images/logo.png",
+        // maka `resolvedUrl.pathname` akan menjadi "/my-project/images/logo.png".
+        const resolvedUrl = new URL(pathValue, baseUrl);
+        
+        // 3. Dapatkan path lengkap yang bersih (tanpa garis miring di awal)
+        const fullPath = resolvedUrl.pathname.substring(1);
+
+        // 4. Periksa apakah path lengkap ini ada di daftar aset kita.
+        if (state.assetUrls[fullPath]) {
+            const blobUrl = state.assetUrls[fullPath];
+            // 5. Ganti path lama dengan Blob URL yang valid.
+            return `${attribute}="${blobUrl}"`;
+        }
+        
+        // Jika tidak ditemukan di aset, jangan ubah apa pun.
+        return match;
+    };
+
+    // 6. Jalankan Regex untuk menemukan SEMUA atribut src dan href, lalu ganti menggunakan fungsi di atas.
+    html = html.replace(/(src|href)=["']([^"']+)["']/g, pathReplacer);
+
+    // Sisipkan CSS dan JS internal (jika ada) - logika ini tetap sama
     const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
     if (styleKey && state.files[styleKey]?.text) {
         html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
@@ -286,15 +312,11 @@ document.addEventListener('DOMContentLoaded', () => {
         html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
     }
 
-    // Buat Blob dari HTML yang sudah final
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
 
     ui.previewIframe.src = url;
     ui.previewOverlay.classList.add('active');
-
-    // JANGAN hapus URL saat onload. Hapus saat preview ditutup.
-    // ui.previewIframe.onload = () => URL.revokeObjectURL(url); // <-- Baris ini dihapus/dinonaktifkan
 }
 
   async function processFiles(fileList) {
