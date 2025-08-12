@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.runBtn.onclick = runPreview;
   }
 
-   // GANTI SELURUH FUNGSI runPreview LAMA ANDA DENGAN YANG INI
+   // GANTI HANYA FUNGSI runPreview ANDA DENGAN VERSI DIAGNOSA INI
 function runPreview() {
     if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) {
         return alert('Tidak ada file index.html ditemukan untuk dijalankan.');
@@ -266,55 +266,43 @@ function runPreview() {
     const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
     let html = state.files[indexKey].text || '';
 
-    // 1. Dapatkan lokasi (path) dari file index.html sebagai basis.
-    // Contoh: jika indexKey adalah "my-project/public/index.html",
-    // maka baseUrl akan menjadi "http://dummy.com/my-project/public/index.html".
-    // Kita menggunakan "http://dummy.com" sebagai basis palsu agar bisa memakai URL API.
+    // Laporan Diagnosa Dimulai
+    console.clear();
+    console.log("%c--- LAPORAN DIAGNOSA PREVIEW ---", "color: blue; font-weight: bold; font-size: 14px;");
+    console.log("Aset gambar yang terdaftar di aplikasi:", Object.keys(state.assetUrls));
+    console.log("-------------------------------------");
+
     const baseUrl = new URL(indexKey, 'http://dummy.com/');
 
-    // Fungsi ini akan dipanggil untuk setiap atribut src="..." atau href="..." yang ditemukan
     const pathReplacer = (match, attribute, pathValue) => {
-        // Abaikan link absolut (http, https), link ke data, atau link kosong
         if (!pathValue || pathValue.startsWith('http') || pathValue.startsWith('data:') || pathValue.startsWith('//')) {
-            return match; // Kembalikan seperti aslinya
+            return match;
         }
 
-        // 2. Gunakan URL API untuk menyelesaikan path relatif, sama seperti cara kerja browser.
-        // Contoh: jika baseUrl adalah ".../public/index.html" dan pathValue adalah "../images/logo.png",
-        // maka `resolvedUrl.pathname` akan menjadi "/my-project/images/logo.png".
-        const resolvedUrl = new URL(pathValue, baseUrl);
-        
-        // 3. Dapatkan path lengkap yang bersih (tanpa garis miring di awal)
-        const fullPath = resolvedUrl.pathname.substring(1);
+        console.log(`\n> Menganalisa path dari HTML: "${pathValue}"`);
 
-        // 4. Periksa apakah path lengkap ini ada di daftar aset kita.
+        const resolvedUrl = new URL(pathValue, baseUrl);
+        const fullPath = resolvedUrl.pathname.substring(1);
+        
+        console.log(`   Path yang dihitung untuk dicocokkan: "${fullPath}"`);
+
+        // Periksa apakah path yang dihitung ada di daftar aset
         if (state.assetUrls[fullPath]) {
             const blobUrl = state.assetUrls[fullPath];
-            // 5. Ganti path lama dengan Blob URL yang valid.
+            console.log(`   ✅ SUKSES! Path ditemukan. Mengganti dengan Blob URL.`);
             return `${attribute}="${blobUrl}"`;
+        } else {
+            // === INI BAGIAN PALING PENTING ===
+            console.log(`   ❌ GAGAL! Path yang dihitung TIDAK DITEMUKAN di daftar aset.`);
+            return match;
         }
-        
-        // Jika tidak ditemukan di aset, jangan ubah apa pun.
-        return match;
     };
 
-    // 6. Jalankan Regex untuk menemukan SEMUA atribut src dan href, lalu ganti menggunakan fungsi di atas.
     html = html.replace(/(src|href)=["']([^"']+)["']/g, pathReplacer);
-
-    // Sisipkan CSS dan JS internal (jika ada) - logika ini tetap sama
-    const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
-    if (styleKey && state.files[styleKey]?.text) {
-        html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
-    }
-
-    const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
-    if (scriptKey && state.files[scriptKey]?.text) {
-        html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
-    }
-
+    
+    // ... sisa kode tidak berubah ...
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
-
     ui.previewIframe.src = url;
     ui.previewOverlay.classList.add('active');
 }
