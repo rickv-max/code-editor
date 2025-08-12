@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.runBtn.onclick = runPreview;
   }
 
-   // GANTI HANYA FUNGSI runPreview ANDA DENGAN VERSI DIAGNOSA INI
+   // INI ADALAH KODE ANDA YANG DIPERBAIKI. GANTI HANYA FUNGSI runPreview DENGAN INI.
 function runPreview() {
     if (!Object.keys(state.files).some(k => k.endsWith('index.html'))) {
         return alert('Tidak ada file index.html ditemukan untuk dijalankan.');
@@ -265,13 +265,7 @@ function runPreview() {
 
     const indexKey = Object.keys(state.files).find(k => k.endsWith('index.html'));
     let html = state.files[indexKey].text || '';
-
-    // Laporan Diagnosa Dimulai
-    console.clear();
-    console.log("%c--- LAPORAN DIAGNOSA PREVIEW ---", "color: blue; font-weight: bold; font-size: 14px;");
-    console.log("Aset gambar yang terdaftar di aplikasi:", Object.keys(state.assetUrls));
-    console.log("-------------------------------------");
-
+    
     const baseUrl = new URL(indexKey, 'http://dummy.com/');
 
     const pathReplacer = (match, attribute, pathValue) => {
@@ -279,30 +273,51 @@ function runPreview() {
             return match;
         }
 
-        console.log(`\n> Menganalisa path dari HTML: "${pathValue}"`);
+        let foundKey = null;
 
+        // === STRATEGI 1: Metode Cerdas (Kode Anda yang hampir berhasil) ===
         const resolvedUrl = new URL(pathValue, baseUrl);
         const fullPath = resolvedUrl.pathname.substring(1);
-        
-        console.log(`   Path yang dihitung untuk dicocokkan: "${fullPath}"`);
-
-        // Periksa apakah path yang dihitung ada di daftar aset
         if (state.assetUrls[fullPath]) {
-            const blobUrl = state.assetUrls[fullPath];
-            console.log(`   ✅ SUKSES! Path ditemukan. Mengganti dengan Blob URL.`);
-            return `${attribute}="${blobUrl}"`;
-        } else {
-            // === INI BAGIAN PALING PENTING ===
-            console.log(`   ❌ GAGAL! Path yang dihitung TIDAK DITEMUKAN di daftar aset.`);
-            return match;
+            foundKey = fullPath;
         }
+
+        // === STRATEGI 2: Rencana Cadangan (Jika cara 1 gagal) ===
+        // Ini akan mencari path yang bagian akhirnya sama persis.
+        if (!foundKey) {
+            const cleanPathValue = pathValue.replace(/^\.\//, ''); // Bersihkan ./ dari awal
+            for (const assetKey in state.assetUrls) {
+                if (assetKey.endsWith('/' + cleanPathValue) || assetKey === cleanPathValue) {
+                    foundKey = assetKey;
+                    break; 
+                }
+            }
+        }
+        
+        // --- Hasil Akhir ---
+        if (foundKey) {
+            return `${attribute}="${state.assetUrls[foundKey]}"`;
+        }
+        
+        return match;
     };
 
     html = html.replace(/(src|href)=["']([^"']+)["']/g, pathReplacer);
-    
-    // ... sisa kode tidak berubah ...
+
+    // ... sisa kode Anda tidak perlu diubah ...
+    const styleKey = Object.keys(state.files).find(k => k.endsWith('style.css'));
+    if (styleKey && state.files[styleKey]?.text) {
+        html = html.replace(/<\/head>/i, `<style>${state.files[styleKey].text}</style></head>`);
+    }
+
+    const scriptKey = Object.keys(state.files).find(k => k.endsWith('script.js'));
+    if (scriptKey && state.files[scriptKey]?.text) {
+        html = html.replace(/<\/body>/i, `<script>${state.files[scriptKey].text}<\/script></body>`);
+    }
+
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
+
     ui.previewIframe.src = url;
     ui.previewOverlay.classList.add('active');
 }
